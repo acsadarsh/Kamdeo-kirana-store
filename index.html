@@ -2,367 +2,378 @@
 <html lang="hi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kamdeo Kirana Bill</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Kamdeo POS App</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 
     <style>
-        /* 57mm Thermal Printer Width Layout */
-        :root {
-            --bill-width: 58mm; /* Standard Thermal Paper */
-        }
-
+        /* --- APP BASE STYLES --- */
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body {
-            font-family: 'Courier New', Courier, monospace; /* Monospace for Receipt look */
-            background-color: #e0e0e0;
-            margin: 0;
+            margin: 0; padding: 0;
+            background-color: #1a1a1a; /* App Background Dark */
+            font-family: 'Segoe UI', sans-serif;
+            height: 100vh;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            padding-bottom: 80px;
+            overflow: hidden; /* Prevent scrolling body */
         }
 
-        /* Phone Screen Menu */
-        .navbar {
-            width: 100%;
-            background-color: #222;
+        /* 1. TOP BAR (App Header) */
+        .app-header {
+            background: #2c3e50;
             color: white;
-            padding: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: fixed;
-            top: 0;
-            z-index: 100;
+            padding: 10px 15px;
+            display: flex; justify-content: space-between; align-items: center;
+            height: 50px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+            z-index: 10;
         }
+        .menu-btn { font-size: 20px; cursor: pointer; }
+        .app-title { font-size: 16px; font-weight: bold; }
         
-        .menu-content { 
-            display: none; position: fixed; top: 45px; left: 0; 
-            background: #333; width: 200px; z-index: 101; 
-            box-shadow: 2px 2px 10px black;
+        /* 2. INPUT DOCK (Fixed Top) */
+        .input-dock {
+            background: #34495e;
+            padding: 10px;
+            display: flex; flex-direction: column; gap: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            z-index: 9;
         }
-        .menu-content a { display: block; color: white; padding: 15px; text-decoration: none; border-bottom: 1px solid #444; }
-        .show-menu { display: block; }
+        .input-row { display: flex; gap: 5px; }
+        
+        /* App Inputs */
+        input {
+            padding: 10px; border: none; border-radius: 5px;
+            font-size: 14px; font-weight: bold; outline: none;
+        }
+        #iName { flex: 2; }
+        #iQty { width: 50px; text-align: center; }
+        #iPrice { width: 80px; }
+        
+        /* App Buttons */
+        .btn { border: none; border-radius: 5px; cursor: pointer; color: white; display: flex; align-items: center; justify-content: center; }
+        .btn-mic { background: #e67e22; width: 40px; }
+        .btn-scan { background: #8e44ad; width: 40px; }
+        .btn-add { background: #27ae60; flex: 1; font-weight: bold; text-transform: uppercase; }
 
-        /* Receipt Container */
-        .receipt-container {
-            width: var(--bill-width);
+        /* 3. SCROLLABLE BILL AREA (Middle) */
+        .scroll-area {
+            flex: 1; /* Fills remaining space */
+            overflow-y: auto;
+            background: #555;
+            padding: 15px;
+            display: flex; justify-content: center;
+        }
+
+        /* --- THE RECEIPT PAPER --- */
+        .paper-bill {
+            width: 100%;
+            max-width: 300px; /* Approx 58mm view on screen */
             background: #fff;
-            padding: 5px;
-            margin-top: 60px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.2);
-            font-size: 11px;
-            color: #000;
+            min-height: 200px;
+            padding: 10px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.5);
+            color: black;
+            font-family: 'Courier New', monospace; /* Thermal Font */
+            font-weight: bold;
+            font-size: 12px;
             position: relative;
         }
 
-        /* Tear-off Effect (Zag-Zag) */
-        .tear-off-top, .tear-off-bottom {
-            height: 10px;
-            background-image: radial-gradient(circle, transparent 70%, white 75%), linear-gradient(#333, #333);
-            background-size: 10px 10px;
-            background-position: 0 -5px;
-            opacity: 0.5;
-            margin: 5px 0;
-        }
-
-        /* Header */
-        .header { text-align: center; margin-bottom: 5px; }
-        .store-name { font-size: 16px; font-weight: bold; margin: 0; text-transform: uppercase; }
-        .sub-text { font-size: 10px; margin: 2px 0; }
-        .divider { border-top: 1px dashed #000; margin: 5px 0; }
-
-        /* Input Fields for Data Entry (Hidden in Print) */
-        .input-section {
-            background: #f9f9f9;
-            padding: 10px;
-            margin: 10px 0;
-            border: 1px solid #ccc;
-            width: 90%;
-            max-width: 400px;
-        }
-        .input-row { display: flex; gap: 5px; margin-bottom: 5px; }
-        input, button { padding: 8px; font-size: 14px; }
-        input[type="text"] { flex: 2; }
+        /* Receipt Elements */
+        .r-header { text-align: center; margin-bottom: 10px; border-bottom: 2px dashed #000; padding-bottom: 5px; }
+        .shop-name { font-size: 18px; font-weight: 900; text-transform: uppercase; margin-bottom: 2px; }
+        .r-row { display: flex; justify-content: space-between; margin-bottom: 3px; }
+        .r-input { border: none; border-bottom: 1px dotted #000; width: 120px; font-family: inherit; font-size: 12px; font-weight: bold; outline: none; }
         
-        /* The Bill Table */
-        table { width: 100%; border-collapse: collapse; }
-        th { border-bottom: 1px solid #000; text-align: left; font-size: 10px; }
-        td { padding: 2px 0; vertical-align: top; font-size: 10px; }
-        .col-item { width: 50%; }
-        .col-qty { width: 15%; text-align: center; }
-        .col-price { width: 35%; text-align: right; }
-        
-        /* Total Section */
-        .total-section { text-align: right; margin-top: 5px; font-weight: bold; font-size: 12px; }
+        /* Receipt Table */
+        .r-table { width: 100%; border-collapse: collapse; margin-top: 5px; }
+        .r-table th { border-bottom: 2px solid #000; text-align: left; font-size: 11px; }
+        .r-table td { padding: 4px 0; border-bottom: 1px dotted #aaa; }
+        .del-icon { color: red; cursor: pointer; font-size: 14px; padding-left: 5px; }
 
-        /* Footer */
-        .footer { text-align: center; margin-top: 10px; font-size: 9px; }
-        .acs-credit { font-size: 8px; margin-top: 5px; font-weight: bold; }
+        /* Receipt Footer */
+        .r-total-box { margin-top: 10px; border-top: 2px solid #000; padding-top: 5px; }
+        .r-grand { font-size: 16px; font-weight: 900; border-top: 1px solid #000; border-bottom: 1px solid #000; margin-top: 5px; padding: 5px 0; }
+        .r-footer { text-align: center; margin-top: 15px; font-size: 10px; }
+        .visit-box { border: 2px solid #000; padding: 5px; margin: 10px 0; font-size: 14px; font-weight: 900; display: inline-block; }
 
-        /* Controls */
-        .controls { 
-            position: fixed; bottom: 0; width: 100%; background: white; 
-            padding: 10px; display: flex; justify-content: space-around; 
-            box-shadow: 0 -2px 10px rgba(0,0,0,0.1); z-index: 99;
+        /* 4. BOTTOM ACTION BAR */
+        .action-bar {
+            background: #fff;
+            height: 60px;
+            display: flex; justify-content: space-around; align-items: center;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.2);
+            z-index: 10;
         }
-        .btn {
-            border: none; padding: 10px; border-radius: 50%; 
-            color: white; font-size: 18px; width: 50px; height: 50px;
-            display: flex; align-items: center; justify-content: center;
+        .action-btn {
+            background: none; border: none;
+            display: flex; flex-direction: column; align-items: center;
+            font-size: 10px; color: #333; gap: 2px; cursor: pointer;
         }
-        .btn-add { background: #28a745; position: fixed; bottom: 80px; right: 20px; box-shadow: 2px 2px 5px #666; }
-        .btn-print { background: #333; }
-        .btn-share { background: #007bff; }
-        .btn-qr { background: #ffc107; color: black; }
+        .action-btn i { font-size: 22px; padding: 8px; border-radius: 50%; color: white; }
+        .ico-print { background: #34495e; }
+        .ico-share { background: #2980b9; }
+        .ico-qr { background: #d35400; }
+        .ico-new { background: #c0392b; }
 
-        /* Scanner Modal */
-        #scanner-modal {
+        /* MODALS (Menu & Scanner) */
+        .modal-overlay {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9); z-index: 200; justify-content: center; align-items: center; flex-direction: column;
+            background: rgba(0,0,0,0.9); z-index: 100; align-items: center; justify-content: center; flex-direction: column;
         }
-        #reader { width: 300px; height: 300px; background: white; }
-        .close-scan { margin-top: 20px; padding: 10px 20px; background: red; color: white; border: none; font-size: 18px; }
+        .sidebar {
+            position: fixed; top: 0; left: -250px; width: 250px; height: 100%;
+            background: #2c3e50; transition: 0.3s; z-index: 200; padding-top: 60px;
+        }
+        .sidebar a { display: block; padding: 15px; color: white; text-decoration: none; border-bottom: 1px solid #34495e; }
+        .sidebar.active { left: 0; }
+        .overlay-click { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:150; display:none;}
 
-        /* Print Settings */
+        /* --- PRINT SETTINGS (The Magic Part) --- */
         @media print {
-            .navbar, .controls, .btn-add, .input-section, .delete-btn, #scanner-modal { display: none !important; }
-            body { background: white; padding: 0; width: var(--bill-width); }
-            .receipt-container { margin: 0; box-shadow: none; width: 100%; }
+            .app-header, .input-dock, .action-bar, .modal-overlay, .del-icon, .sidebar { display: none !important; }
+            body, .scroll-area { background: white; height: auto; overflow: visible; display: block; }
+            .paper-bill { 
+                box-shadow: none; margin: 0; width: 100%; max-width: 58mm; 
+                border: none; padding: 0; 
+            }
+            /* Hide input borders in print */
+            .r-input { border: none; }
+            .discount-inp { border: none; text-align: right; }
         }
     </style>
 </head>
 <body>
 
-    <div class="navbar">
-        <div onclick="document.getElementById('menu').classList.toggle('show-menu')"><i class="fas fa-bars"></i></div>
-        <div>Billing App (57mm)</div>
-        <div id="datetime-nav" style="font-size: 12px;"></div>
-    </div>
-    <div id="menu" class="menu-content">
-        <a href="#" onclick="location.reload()">New Bill (Home)</a>
-        <a href="https://acsadarsh.github.io/Acs/">Connect to ACS</a>
-        <a href="https://wa.me/918252900810">Contact ACS (WhatsApp)</a>
+    <div class="overlay-click" id="menuOverlay" onclick="toggleMenu()"></div>
+    <div class="sidebar" id="sidebar">
+        <a href="#" onclick="location.reload()">🔄 New Bill</a>
+        <a href="https://acsadarsh.github.io/Acs/">🌐 Connect to ACS</a>
+        <a href="https://wa.me/918252900810">📞 Contact ACS</a>
+        <a href="#" onclick="toggleMenu()">❌ Close Menu</a>
     </div>
 
-    <div id="scanner-modal">
-        <div id="reader"></div>
-        <button class="close-scan" onclick="stopScanner()">Close Scanner</button>
+    <div class="app-header">
+        <div class="menu-btn" onclick="toggleMenu()"><i class="fas fa-bars"></i></div>
+        <div class="app-title">KAMDEO POS</div>
+        <div style="font-size: 10px; color:#aaa;">Powered by ACS</div>
     </div>
 
-    <div class="input-section" style="margin-top: 60px;">
-        <h3>Add Item</h3>
+    <div class="input-dock">
         <div class="input-row">
-            <input type="text" id="itemName" placeholder="Item Name (बोले या लिखें)" style="width: 100%;">
-            <button onclick="startDictation()"><i class="fas fa-microphone"></i></button>
-            <button onclick="startScanner()"><i class="fas fa-camera"></i></button>
+            <input type="text" id="iName" placeholder="Item Name (बोलें/लिखें)">
+            <button class="btn btn-mic" onclick="startDictation()"><i class="fas fa-microphone"></i></button>
+            <button class="btn btn-scan" onclick="startScanner()"><i class="fas fa-barcode"></i></button>
         </div>
         <div class="input-row">
-            <input type="number" id="itemQty" placeholder="Qty" value="1" style="width: 30%;">
-            <input type="number" id="itemPrice" placeholder="Price" style="width: 40%;">
-            <button onclick="addItem()" style="background: #28a745; color: white; width: 30%;">Add</button>
+            <input type="number" id="iPrice" placeholder="Rate ₹">
+            <input type="number" id="iQty" placeholder="Qty" value="1">
+            <button class="btn btn-add" onclick="addItem()">ADD +</button>
         </div>
     </div>
 
-    <div class="receipt-container" id="bill-content">
-        <div class="tear-off-top"></div> <div class="header">
-            <div class="store-name">KAMDEO KIRANA STORE</div>
-            <div class="sub-text">Itkhori, Dhankheri, 825408 JH</div>
-            <div class="sub-text">Near Bhadrakali Gate, Chatra Road</div>
-            <div class="sub-text"><strong>Owner: KAMDEO PRAJAPATI</strong></div>
-            <div class="sub-text">Mo: 96615 15728</div>
-            <div class="divider"></div>
-            <div style="text-align: left;">
-                Date: <span id="billDate"></span><br>
-                Name: <span id="billCustName" contenteditable="true">Customer</span>
+    <div class="scroll-area">
+        <div class="paper-bill" id="billPaper">
+            <div class="r-header">
+                <div class="shop-name">KAMDEO KIRANA STORE</div>
+                <div>Itkhori, Dhankheri, 825408 JH</div>
+                <div>Mo: 96615 15728</div>
+                <div style="font-weight:bold;">Owner: KAMDEO PRAJAPATI</div>
             </div>
-            <div class="divider"></div>
-        </div>
 
-        <table id="billTable">
-            <thead>
-                <tr>
-                    <th class="col-item">Item</th>
-                    <th class="col-qty">Q</th>
-                    <th class="col-price">Amt</th>
-                </tr>
-            </thead>
-            <tbody>
-                </tbody>
-        </table>
-
-        <div class="divider"></div>
-        
-        <div class="total-section">
-            TOTAL: ₹ <span id="grandTotal">0.00</span>
-        </div>
-
-        <div class="footer">
-            <div style="margin: 10px 0;">VISIT AGAIN</div>
-            
-            <div id="qrcode" style="display: flex; justify-content: center; margin: 5px 0;"></div>
-            
-            <div class="acs-credit">
-                ADARSH COMPUTER SERVICES & SOLVE<br>
-                POWERED BY ACS
+            <div class="r-row">
+                <span>Date: <span id="bDate"></span></span>
             </div>
-            <div class="tear-off-bottom"></div>
+            <div class="r-row" style="align-items: center;">
+                <span>Name:</span>
+                <input type="text" class="r-input" id="cName" placeholder="Enter Name">
+            </div>
+
+            <table class="r-table" id="billTable">
+                <thead>
+                    <tr>
+                        <th style="width:45%">ITEM</th>
+                        <th style="width:20%">RATE</th>
+                        <th style="width:10%">Q</th>
+                        <th style="width:25%; text-align:right;">AMT</th>
+                        <th style="width:5%"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    </tbody>
+            </table>
+
+            <div class="r-total-box">
+                <div class="r-row">
+                    <span>Total:</span>
+                    <span id="subTotal">0.00</span>
+                </div>
+                <div class="r-row">
+                    <span>Discount:</span>
+                    <span>- <input type="number" id="discountVal" class="r-input" style="width:40px; text-align:right;" placeholder="0" onkeyup="updateTotal()"></span>
+                </div>
+                <div class="r-row r-grand">
+                    <span>GRAND TOTAL:</span>
+                    <span>₹ <span id="grandTotal">0.00</span></span>
+                </div>
+            </div>
+
+            <div class="r-footer">
+                <div class="visit-box">VISIT AGAIN</div>
+                <div style="font-weight:800; margin-top:5px;">ADARSH COMPUTER SERVICES & SOLVE</div>
+                <div>POWERED BY ACS</div>
+            </div>
         </div>
     </div>
 
-    <div class="controls">
-        <button class="btn btn-print" onclick="window.print()"><i class="fas fa-print"></i></button>
-        <button class="btn btn-qr" onclick="generateQR()"><i class="fas fa-qrcode"></i></button>
-        <button class="btn btn-share" onclick="shareAsImage()"><i class="fas fa-share-alt"></i></button>
+    <div class="action-bar">
+        <button class="action-btn" onclick="location.reload()">
+            <i class="fas fa-file-circle-plus ico-new"></i> New
+        </button>
+        <button class="action-btn" onclick="window.print()">
+            <i class="fas fa-print ico-print"></i> Print
+        </button>
+        <button class="action-btn" onclick="shareBill()">
+            <i class="fas fa-share-nodes ico-share"></i> Share
+        </button>
+        <button class="action-btn" onclick="showQR()">
+            <i class="fas fa-qrcode ico-qr"></i> QR
+        </button>
+    </div>
+
+    <div class="modal-overlay" id="scannerModal">
+        <div style="color:white; font-size:18px; margin-bottom:10px;">Scan Product Code</div>
+        <div id="reader" style="width:300px; height:300px; background:white;"></div>
+        <button class="btn" style="background:red; margin-top:20px; padding:10px;" onclick="closeScanner()">CLOSE</button>
+    </div>
+
+    <div class="modal-overlay" id="qrModal">
+        <div style="background:white; padding:20px; border-radius:10px; text-align:center;">
+            <h3>Scan to Pay / View</h3>
+            <div id="qrcode"></div>
+            <button class="btn" style="background:#333; margin-top:15px; width:100%; padding:10px;" onclick="document.getElementById('qrModal').style.display='none'">CLOSE</button>
+        </div>
     </div>
 
     <script>
-        // Init Date
-        document.getElementById('billDate').innerText = new Date().toLocaleString();
+        // Init
+        document.getElementById('bDate').innerText = new Date().toLocaleDateString('en-IN');
 
-        // 1. Voice Typing (Requires HTTPS)
-        function startDictation() {
-            if (window.hasOwnProperty('webkitSpeechRecognition')) {
-                const recognition = new webkitSpeechRecognition();
-                recognition.lang = "hi-IN";
-                recognition.start();
-                recognition.onresult = function(e) {
-                    document.getElementById('itemName').value = e.results[0][0].transcript;
-                };
+        function toggleMenu() {
+            const sb = document.getElementById('sidebar');
+            const ov = document.getElementById('menuOverlay');
+            if (sb.classList.contains('active')) {
+                sb.classList.remove('active'); ov.style.display = 'none';
             } else {
-                alert("Voice typing works on Chrome & HTTPS only.");
+                sb.classList.add('active'); ov.style.display = 'block';
             }
         }
 
-        // 2. Barcode/QR Scanner (Requires HTTPS)
+        // --- CALCULATION LOGIC ---
+        function addItem() {
+            const name = document.getElementById('iName').value;
+            const price = parseFloat(document.getElementById('iPrice').value);
+            const qty = parseFloat(document.getElementById('iQty').value);
+
+            if (!name || isNaN(price) || isNaN(qty)) { alert("Check details!"); return; }
+
+            const total = price * qty;
+            const tbody = document.getElementById('billTable').querySelector('tbody');
+            const row = tbody.insertRow();
+            
+            row.innerHTML = `
+                <td>${name}</td>
+                <td style="text-align:center;">${price}</td>
+                <td style="text-align:center;">${qty}</td>
+                <td style="text-align:right;" class="row-amt" data-val="${total}">${total.toFixed(2)}</td>
+                <td style="text-align:center;"><i class="fas fa-times del-icon" onclick="deleteRow(this)"></i></td>
+            `;
+
+            // Clear inputs
+            document.getElementById('iName').value = '';
+            document.getElementById('iPrice').value = '';
+            document.getElementById('iQty').value = '1';
+            
+            updateTotal();
+        }
+
+        function deleteRow(icon) {
+            icon.closest('tr').remove();
+            updateTotal();
+        }
+
+        function updateTotal() {
+            let sum = 0;
+            document.querySelectorAll('.row-amt').forEach(td => sum += parseFloat(td.getAttribute('data-val')));
+            
+            document.getElementById('subTotal').innerText = sum.toFixed(2);
+            const disc = parseFloat(document.getElementById('discountVal').value) || 0;
+            document.getElementById('grandTotal').innerText = (sum - disc).toFixed(2);
+        }
+
+        // --- TOOLS ---
+        function startDictation() {
+            if ('webkitSpeechRecognition' in window) {
+                const rec = new webkitSpeechRecognition();
+                rec.lang = 'hi-IN';
+                rec.start();
+                rec.onresult = e => document.getElementById('iName').value = e.results[0][0].transcript;
+            } else { alert("Use Chrome!"); }
+        }
+
         let html5QrcodeScanner;
         function startScanner() {
-            document.getElementById('scanner-modal').style.display = 'flex';
+            document.getElementById('scannerModal').style.display = 'flex';
             html5QrcodeScanner = new Html5Qrcode("reader");
-            html5QrcodeScanner.start(
-                { facingMode: "environment" }, 
-                { fps: 10, qrbox: 250 },
-                (decodedText, decodedResult) => {
-                    // Success Scan
-                    document.getElementById('itemName').value = decodedText; // Fills barcode number or text
-                    stopScanner();
-                    alert("Scanned! If it's a barcode, type the product name now.");
-                },
-                (errorMessage) => {
-                    // scanning...
-                }
-            ).catch(err => {
-                alert("Camera error. Please use HTTPS.");
-                stopScanner();
-            });
+            html5QrcodeScanner.start({ facingMode: "environment" }, { fps: 10, qrbox: 200 },
+                (decodedText) => {
+                    document.getElementById('iName').value = decodedText;
+                    closeScanner();
+                    alert("Scanned! Enter Price.");
+                    document.getElementById('iPrice').focus();
+                }).catch(err => { console.log(err); closeScanner(); alert("Camera Error"); });
+        }
+        function closeScanner() {
+            if(html5QrcodeScanner) html5QrcodeScanner.stop();
+            document.getElementById('scannerModal').style.display = 'none';
         }
 
-        function stopScanner() {
-            if(html5QrcodeScanner) {
-                html5QrcodeScanner.stop().then(() => {
-                    document.getElementById('scanner-modal').style.display = 'none';
-                });
-            } else {
-                document.getElementById('scanner-modal').style.display = 'none';
-            }
-        }
-
-        // 3. Add Item to Bill
-        function addItem() {
-            const name = document.getElementById('itemName').value;
-            const qty = parseFloat(document.getElementById('itemQty').value) || 0;
-            const price = parseFloat(document.getElementById('itemPrice').value) || 0;
-            
-            if(name && qty > 0) {
-                const total = qty * price;
-                const table = document.getElementById('billTable').getElementsByTagName('tbody')[0];
-                const row = table.insertRow();
-                row.innerHTML = `
-                    <td class="col-item">${name}</td>
-                    <td class="col-qty">${qty}</td>
-                    <td class="col-price">${total.toFixed(2)}</td>
-                `;
-                
-                // Clear inputs
-                document.getElementById('itemName').value = '';
-                document.getElementById('itemQty').value = '1';
-                document.getElementById('itemPrice').value = '';
-                
-                calculateTotal();
-            }
-        }
-
-        function calculateTotal() {
-            let total = 0;
-            document.querySelectorAll('#billTable tbody tr').forEach(row => {
-                total += parseFloat(row.cells[2].innerText);
-            });
-            document.getElementById('grandTotal').innerText = total.toFixed(2);
-        }
-
-        // 4. Generate Internal QR (Contains Bill Text)
-        function generateQR() {
-            const container = document.getElementById('qrcode');
-            container.innerHTML = "";
-            
-            // Collect bill text
-            let billText = "KAMDEO KIRANA\n";
-            billText += "Date: " + document.getElementById('billDate').innerText + "\n";
-            billText += "Items:\n";
-            
-            document.querySelectorAll('#billTable tbody tr').forEach(row => {
-                billText += `${row.cells[0].innerText} (${row.cells[1].innerText}) - ${row.cells[2].innerText}\n`;
-            });
-            
-            billText += "\nTOTAL: " + document.getElementById('grandTotal').innerText;
-            billText += "\nPowered by ACS";
-
-            new QRCode(container, {
-                text: billText,
-                width: 100,
-                height: 100
-            });
-        }
-
-        // 5. Share as Image (Photo)
-        async function shareAsImage() {
-            // First generate QR so it appears in image
-            generateQR();
-            
-            const element = document.getElementById('bill-content');
-            
+        async function shareBill() {
+            const element = document.getElementById('billPaper');
             try {
-                // Use html2canvas to take screenshot of bill div
-                const canvas = await html2canvas(element, { scale: 2 });
+                // Temporarily hide delete icons for screenshot
+                document.querySelectorAll('.del-icon').forEach(e => e.style.display = 'none');
                 
+                const canvas = await html2canvas(element, { scale: 2, backgroundColor: "#ffffff" });
+                
+                // Show delete icons back
+                document.querySelectorAll('.del-icon').forEach(e => e.style.display = 'inline');
+
                 canvas.toBlob(async (blob) => {
-                    const file = new File([blob], "bill.png", { type: "image/png" });
-                    
+                    const file = new File([blob], "KamdeoBill.png", { type: "image/png" });
                     if (navigator.share) {
-                        try {
-                            await navigator.share({
-                                files: [file],
-                                title: 'Bill',
-                                text: 'Here is your bill from Kamdeo Kirana Store.'
-                            });
-                        } catch (err) {
-                            console.log('Error sharing', err);
-                        }
+                        await navigator.share({ files: [file], title: 'Bill' });
                     } else {
-                        alert("Sharing not supported on this browser. Image downloaded instead.");
-                        // Fallback: Download image
                         const a = document.createElement('a');
                         a.href = canvas.toDataURL();
-                        a.download = 'bill.png';
+                        a.download = 'KamdeoBill.png';
                         a.click();
                     }
                 });
-            } catch (err) {
-                alert("Error creating image: " + err);
-            }
+            } catch (err) { alert("Error sharing: " + err); }
+        }
+
+        function showQR() {
+            document.getElementById('qrcode').innerHTML = "";
+            document.getElementById('qrModal').style.display = 'flex';
+            const txt = `KAMDEO KIRANA\nTotal: ${document.getElementById('grandTotal').innerText}\nDate: ${new Date().toLocaleDateString()}`;
+            new QRCode(document.getElementById('qrcode'), { text: txt, width: 150, height: 150 });
         }
     </script>
 </body>
