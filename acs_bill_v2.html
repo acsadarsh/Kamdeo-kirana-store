@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kamdeo Kirana Bill</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+
+    <style>
+        /* 57mm Thermal Printer Width Layout */
+        :root {
+            --bill-width: 58mm; /* Standard Thermal Paper */
+        }
+
+        body {
+            font-family: 'Courier New', Courier, monospace; /* Monospace for Receipt look */
+            background-color: #e0e0e0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-bottom: 80px;
+        }
+
+        /* Phone Screen Menu */
+        .navbar {
+            width: 100%;
+            background-color: #222;
+            color: white;
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: fixed;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .menu-content { 
+            display: none; position: fixed; top: 45px; left: 0; 
+            background: #333; width: 200px; z-index: 101; 
+            box-shadow: 2px 2px 10px black;
+        }
+        .menu-content a { display: block; color: white; padding: 15px; text-decoration: none; border-bottom: 1px solid #444; }
+        .show-menu { display: block; }
+
+        /* Receipt Container */
+        .receipt-container {
+            width: var(--bill-width);
+            background: #fff;
+            padding: 5px;
+            margin-top: 60px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+            font-size: 11px;
+            color: #000;
+            position: relative;
+        }
+
+        /* Tear-off Effect (Zag-Zag) */
+        .tear-off-top, .tear-off-bottom {
+            height: 10px;
+            background-image: radial-gradient(circle, transparent 70%, white 75%), linear-gradient(#333, #333);
+            background-size: 10px 10px;
+            background-position: 0 -5px;
+            opacity: 0.5;
+            margin: 5px 0;
+        }
+
+        /* Header */
+        .header { text-align: center; margin-bottom: 5px; }
+        .store-name { font-size: 16px; font-weight: bold; margin: 0; text-transform: uppercase; }
+        .sub-text { font-size: 10px; margin: 2px 0; }
+        .divider { border-top: 1px dashed #000; margin: 5px 0; }
+
+        /* Input Fields for Data Entry (Hidden in Print) */
+        .input-section {
+            background: #f9f9f9;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            width: 90%;
+            max-width: 400px;
+        }
+        .input-row { display: flex; gap: 5px; margin-bottom: 5px; }
+        input, button { padding: 8px; font-size: 14px; }
+        input[type="text"] { flex: 2; }
+        
+        /* The Bill Table */
+        table { width: 100%; border-collapse: collapse; }
+        th { border-bottom: 1px solid #000; text-align: left; font-size: 10px; }
+        td { padding: 2px 0; vertical-align: top; font-size: 10px; }
+        .col-item { width: 50%; }
+        .col-qty { width: 15%; text-align: center; }
+        .col-price { width: 35%; text-align: right; }
+        
+        /* Total Section */
+        .total-section { text-align: right; margin-top: 5px; font-weight: bold; font-size: 12px; }
+
+        /* Footer */
+        .footer { text-align: center; margin-top: 10px; font-size: 9px; }
+        .acs-credit { font-size: 8px; margin-top: 5px; font-weight: bold; }
+
+        /* Controls */
+        .controls { 
+            position: fixed; bottom: 0; width: 100%; background: white; 
+            padding: 10px; display: flex; justify-content: space-around; 
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1); z-index: 99;
+        }
+        .btn {
+            border: none; padding: 10px; border-radius: 50%; 
+            color: white; font-size: 18px; width: 50px; height: 50px;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .btn-add { background: #28a745; position: fixed; bottom: 80px; right: 20px; box-shadow: 2px 2px 5px #666; }
+        .btn-print { background: #333; }
+        .btn-share { background: #007bff; }
+        .btn-qr { background: #ffc107; color: black; }
+
+        /* Scanner Modal */
+        #scanner-modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9); z-index: 200; justify-content: center; align-items: center; flex-direction: column;
+        }
+        #reader { width: 300px; height: 300px; background: white; }
+        .close-scan { margin-top: 20px; padding: 10px 20px; background: red; color: white; border: none; font-size: 18px; }
+
+        /* Print Settings */
+        @media print {
+            .navbar, .controls, .btn-add, .input-section, .delete-btn, #scanner-modal { display: none !important; }
+            body { background: white; padding: 0; width: var(--bill-width); }
+            .receipt-container { margin: 0; box-shadow: none; width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="navbar">
+        <div onclick="document.getElementById('menu').classList.toggle('show-menu')"><i class="fas fa-bars"></i></div>
+        <div>Billing App (57mm)</div>
+        <div id="datetime-nav" style="font-size: 12px;"></div>
+    </div>
+    <div id="menu" class="menu-content">
+        <a href="#" onclick="location.reload()">New Bill (Home)</a>
+        <a href="https://acsadarsh.github.io/Acs/">Connect to ACS</a>
+        <a href="https://wa.me/918252900810">Contact ACS (WhatsApp)</a>
+    </div>
+
+    <div id="scanner-modal">
+        <div id="reader"></div>
+        <button class="close-scan" onclick="stopScanner()">Close Scanner</button>
+    </div>
+
+    <div class="input-section" style="margin-top: 60px;">
+        <h3>Add Item</h3>
+        <div class="input-row">
+            <input type="text" id="itemName" placeholder="Item Name (बोले या लिखें)" style="width: 100%;">
+            <button onclick="startDictation()"><i class="fas fa-microphone"></i></button>
+            <button onclick="startScanner()"><i class="fas fa-camera"></i></button>
+        </div>
+        <div class="input-row">
+            <input type="number" id="itemQty" placeholder="Qty" value="1" style="width: 30%;">
+            <input type="number" id="itemPrice" placeholder="Price" style="width: 40%;">
+            <button onclick="addItem()" style="background: #28a745; color: white; width: 30%;">Add</button>
+        </div>
+    </div>
+
+    <div class="receipt-container" id="bill-content">
+        <div class="tear-off-top"></div> <div class="header">
+            <div class="store-name">KAMDEO KIRANA STORE</div>
+            <div class="sub-text">Itkhori, Dhankheri, 825408 JH</div>
+            <div class="sub-text">Near Bhadrakali Gate, Chatra Road</div>
+            <div class="sub-text"><strong>Owner: KAMDEO PRAJAPATI</strong></div>
+            <div class="sub-text">Mo: 96615 15728</div>
+            <div class="divider"></div>
+            <div style="text-align: left;">
+                Date: <span id="billDate"></span><br>
+                Name: <span id="billCustName" contenteditable="true">Customer</span>
+            </div>
+            <div class="divider"></div>
+        </div>
+
+        <table id="billTable">
+            <thead>
+                <tr>
+                    <th class="col-item">Item</th>
+                    <th class="col-qty">Q</th>
+                    <th class="col-price">Amt</th>
+                </tr>
+            </thead>
+            <tbody>
+                </tbody>
+        </table>
+
+        <div class="divider"></div>
+        
+        <div class="total-section">
+            TOTAL: ₹ <span id="grandTotal">0.00</span>
+        </div>
+
+        <div class="footer">
+            <div style="margin: 10px 0;">VISIT AGAIN</div>
+            
+            <div id="qrcode" style="display: flex; justify-content: center; margin: 5px 0;"></div>
+            
+            <div class="acs-credit">
+                ADARSH COMPUTER SERVICES & SOLVE<br>
+                POWERED BY ACS
+            </div>
+            <div class="tear-off-bottom"></div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <button class="btn btn-print" onclick="window.print()"><i class="fas fa-print"></i></button>
+        <button class="btn btn-qr" onclick="generateQR()"><i class="fas fa-qrcode"></i></button>
+        <button class="btn btn-share" onclick="shareAsImage()"><i class="fas fa-share-alt"></i></button>
+    </div>
+
+    <script>
+        // Init Date
+        document.getElementById('billDate').innerText = new Date().toLocaleString();
+
+        // 1. Voice Typing (Requires HTTPS)
+        function startDictation() {
+            if (window.hasOwnProperty('webkitSpeechRecognition')) {
+                const recognition = new webkitSpeechRecognition();
+                recognition.lang = "hi-IN";
+                recognition.start();
+                recognition.onresult = function(e) {
+                    document.getElementById('itemName').value = e.results[0][0].transcript;
+                };
+            } else {
+                alert("Voice typing works on Chrome & HTTPS only.");
+            }
+        }
+
+        // 2. Barcode/QR Scanner (Requires HTTPS)
+        let html5QrcodeScanner;
+        function startScanner() {
+            document.getElementById('scanner-modal').style.display = 'flex';
+            html5QrcodeScanner = new Html5Qrcode("reader");
+            html5QrcodeScanner.start(
+                { facingMode: "environment" }, 
+                { fps: 10, qrbox: 250 },
+                (decodedText, decodedResult) => {
+                    // Success Scan
+                    document.getElementById('itemName').value = decodedText; // Fills barcode number or text
+                    stopScanner();
+                    alert("Scanned! If it's a barcode, type the product name now.");
+                },
+                (errorMessage) => {
+                    // scanning...
+                }
+            ).catch(err => {
+                alert("Camera error. Please use HTTPS.");
+                stopScanner();
+            });
+        }
+
+        function stopScanner() {
+            if(html5QrcodeScanner) {
+                html5QrcodeScanner.stop().then(() => {
+                    document.getElementById('scanner-modal').style.display = 'none';
+                });
+            } else {
+                document.getElementById('scanner-modal').style.display = 'none';
+            }
+        }
+
+        // 3. Add Item to Bill
+        function addItem() {
+            const name = document.getElementById('itemName').value;
+            const qty = parseFloat(document.getElementById('itemQty').value) || 0;
+            const price = parseFloat(document.getElementById('itemPrice').value) || 0;
+            
+            if(name && qty > 0) {
+                const total = qty * price;
+                const table = document.getElementById('billTable').getElementsByTagName('tbody')[0];
+                const row = table.insertRow();
+                row.innerHTML = `
+                    <td class="col-item">${name}</td>
+                    <td class="col-qty">${qty}</td>
+                    <td class="col-price">${total.toFixed(2)}</td>
+                `;
+                
+                // Clear inputs
+                document.getElementById('itemName').value = '';
+                document.getElementById('itemQty').value = '1';
+                document.getElementById('itemPrice').value = '';
+                
+                calculateTotal();
+            }
+        }
+
+        function calculateTotal() {
+            let total = 0;
+            document.querySelectorAll('#billTable tbody tr').forEach(row => {
+                total += parseFloat(row.cells[2].innerText);
+            });
+            document.getElementById('grandTotal').innerText = total.toFixed(2);
+        }
+
+        // 4. Generate Internal QR (Contains Bill Text)
+        function generateQR() {
+            const container = document.getElementById('qrcode');
+            container.innerHTML = "";
+            
+            // Collect bill text
+            let billText = "KAMDEO KIRANA\n";
+            billText += "Date: " + document.getElementById('billDate').innerText + "\n";
+            billText += "Items:\n";
+            
+            document.querySelectorAll('#billTable tbody tr').forEach(row => {
+                billText += `${row.cells[0].innerText} (${row.cells[1].innerText}) - ${row.cells[2].innerText}\n`;
+            });
+            
+            billText += "\nTOTAL: " + document.getElementById('grandTotal').innerText;
+            billText += "\nPowered by ACS";
+
+            new QRCode(container, {
+                text: billText,
+                width: 100,
+                height: 100
+            });
+        }
+
+        // 5. Share as Image (Photo)
+        async function shareAsImage() {
+            // First generate QR so it appears in image
+            generateQR();
+            
+            const element = document.getElementById('bill-content');
+            
+            try {
+                // Use html2canvas to take screenshot of bill div
+                const canvas = await html2canvas(element, { scale: 2 });
+                
+                canvas.toBlob(async (blob) => {
+                    const file = new File([blob], "bill.png", { type: "image/png" });
+                    
+                    if (navigator.share) {
+                        try {
+                            await navigator.share({
+                                files: [file],
+                                title: 'Bill',
+                                text: 'Here is your bill from Kamdeo Kirana Store.'
+                            });
+                        } catch (err) {
+                            console.log('Error sharing', err);
+                        }
+                    } else {
+                        alert("Sharing not supported on this browser. Image downloaded instead.");
+                        // Fallback: Download image
+                        const a = document.createElement('a');
+                        a.href = canvas.toDataURL();
+                        a.download = 'bill.png';
+                        a.click();
+                    }
+                });
+            } catch (err) {
+                alert("Error creating image: " + err);
+            }
+        }
+    </script>
+</body>
+</html>
