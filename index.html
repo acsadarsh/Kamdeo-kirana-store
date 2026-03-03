@@ -16,7 +16,7 @@
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body {
             margin: 0; padding: 0;
-            background-color: #2c3e50; /* Dark App Theme */
+            background-color: #2c3e50;
             font-family: 'Segoe UI', sans-serif;
             height: 100vh;
             display: flex;
@@ -34,7 +34,7 @@
             box-shadow: 0 2px 5px rgba(0,0,0,0.5);
         }
         
-        /* 2. INPUT DOCK (Fixed Top) */
+        /* 2. INPUT DOCK */
         .input-dock {
             background: #34495e;
             padding: 10px;
@@ -63,10 +63,10 @@
             display: flex; justify-content: center;
         }
 
-        /* --- THE RECEIPT PAPER (58mm Style) --- */
+        /* --- RECEIPT PAPER (58mm Style) --- */
         .paper-bill {
             width: 100%;
-            max-width: 300px; /* 58mm on screen */
+            max-width: 300px;
             background: #fff;
             min-height: 200px;
             padding: 10px;
@@ -94,44 +94,45 @@
         .r-footer { text-align: center; margin-top: 15px; font-size: 10px; }
         .visit-box { border: 2px solid #000; padding: 5px; margin: 10px 0; font-size: 14px; font-weight: 900; display: inline-block; }
 
-        /* 4. BOTTOM ACTION BAR (The 4 Buttons) */
+        /* 4. BOTTOM ACTION BAR (Raised Up) */
         .action-bar {
             background: #fff;
-            height: 70px;
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 0 10px;
-            box-shadow: 0 -2px 10px rgba(0,0,0,0.2);
-            z-index: 10;
+            /* Height increased to accommodate safe area */
+            height: auto;
+            min-height: 90px; 
+            padding-bottom: 30px; /* Extra padding at bottom for navigation bar */
+            padding-top: 10px;
+            display: flex; justify-content: space-between; align-items: flex-start;
+            padding-left: 10px; padding-right: 10px;
+            box-shadow: 0 -5px 15px rgba(0,0,0,0.3);
+            z-index: 100;
         }
         .action-btn {
             background: none; border: none;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            font-size: 10px; font-weight: bold; color: #333; 
+            font-size: 11px; font-weight: bold; color: #333; 
             width: 24%; cursor: pointer;
         }
-        .action-btn i { font-size: 20px; padding: 10px; border-radius: 10px; color: white; margin-bottom: 4px; }
+        .action-btn i { font-size: 22px; padding: 12px; border-radius: 12px; color: white; margin-bottom: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
         
-        /* Colors for Buttons */
+        /* Colors */
         .btn-p-print i { background: #34495e; }
         .btn-p-pdf i { background: #e74c3c; }
         .btn-p-share i { background: #2980b9; }
         .btn-p-qr i { background: #f39c12; }
 
         /* OVERLAYS */
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 100; align-items: center; justify-content: center; flex-direction: column; }
-        .sidebar { position: fixed; top: 0; left: -250px; width: 250px; height: 100%; background: #2c3e50; transition: 0.3s; z-index: 200; padding-top: 60px; }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 200; align-items: center; justify-content: center; flex-direction: column; }
+        .sidebar { position: fixed; top: 0; left: -250px; width: 250px; height: 100%; background: #2c3e50; transition: 0.3s; z-index: 300; padding-top: 60px; }
         .sidebar a { display: block; padding: 15px; color: white; text-decoration: none; border-bottom: 1px solid #34495e; }
         .sidebar.active { left: 0; }
-        .overlay-click { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:150; display:none;}
+        .overlay-click { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:250; display:none;}
 
         /* PRINT SETTINGS */
         @media print {
             .app-header, .input-dock, .action-bar, .modal-overlay, .del-icon, .sidebar { display: none !important; }
             body, .scroll-area { background: white; height: auto; overflow: visible; display: block; }
-            .paper-bill { 
-                box-shadow: none; margin: 0; width: 100%; max-width: 58mm; 
-                border: none; padding: 0; 
-            }
+            .paper-bill { box-shadow: none; margin: 0; width: 100%; max-width: 58mm; border: none; padding: 0; }
             .r-input { border: none; }
         }
     </style>
@@ -271,51 +272,27 @@
             document.getElementById('grandTotal').innerText = (sum - disc).toFixed(2);
         }
 
-        // --- 4 MAIN FUNCTIONS ---
-        
-        // 1. DOWNLOAD PDF
         function downloadPDF() {
             const element = document.getElementById('billPaper');
-            // Hide delete icons for PDF
             document.querySelectorAll('.del-icon').forEach(e => e.style.display = 'none');
-            
-            const opt = {
-                margin: 0,
-                filename: 'Kamdeo_Bill.pdf',
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2 },
-                jsPDF: { unit: 'mm', format: [70, 200], orientation: 'portrait' } // Custom thermal size
-            };
-            
-            html2pdf().set(opt).from(element).save().then(() => {
-                // Show delete icons back
-                document.querySelectorAll('.del-icon').forEach(e => e.style.display = 'inline');
-            });
+            const opt = { margin: 0, filename: 'Kamdeo_Bill.pdf', image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: [70, 200], orientation: 'portrait' } };
+            html2pdf().set(opt).from(element).save().then(() => { document.querySelectorAll('.del-icon').forEach(e => e.style.display = 'inline'); });
         }
 
-        // 2. SHARE IMAGE
         async function shareBill() {
             const element = document.getElementById('billPaper');
             try {
                 document.querySelectorAll('.del-icon').forEach(e => e.style.display = 'none');
                 const canvas = await html2canvas(element, { scale: 2, backgroundColor: "#ffffff" });
                 document.querySelectorAll('.del-icon').forEach(e => e.style.display = 'inline');
-
                 canvas.toBlob(async (blob) => {
                     const file = new File([blob], "Bill.png", { type: "image/png" });
-                    if (navigator.share) {
-                        await navigator.share({ files: [file], title: 'Bill' });
-                    } else {
-                        const a = document.createElement('a');
-                        a.href = canvas.toDataURL();
-                        a.download = 'Bill.png';
-                        a.click();
-                    }
+                    if (navigator.share) { await navigator.share({ files: [file], title: 'Bill' }); } 
+                    else { const a = document.createElement('a'); a.href = canvas.toDataURL(); a.download = 'Bill.png'; a.click(); }
                 });
             } catch (err) { alert("Error sharing"); }
         }
 
-        // 3. SHOW QR
         function showQR() {
             document.getElementById('qrcode').innerHTML = "";
             document.getElementById('qrModal').style.display = 'flex';
@@ -323,7 +300,6 @@
             new QRCode(document.getElementById('qrcode'), { text: txt, width: 150, height: 150 });
         }
 
-        // 4. VOICE & SCAN
         function startDictation() {
             if ('webkitSpeechRecognition' in window) {
                 const rec = new webkitSpeechRecognition();
