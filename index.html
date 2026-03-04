@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Kamdeo POS Ultimate</title>
+    <title>Kamdeo Super POS</title>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -19,299 +19,408 @@
         /* HEADER */
         .app-header { background: #1a252f; color: white; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; height: 50px; flex-shrink: 0; }
         
-        /* INPUT AREA (Sticky Top) */
-        .input-dock { background: #34495e; padding: 10px; display: flex; flex-direction: column; gap: 8px; z-index: 10; flex-shrink: 0; box-shadow: 0 2px 5px rgba(0,0,0,0.3); }
+        /* VIEWS (Pages) */
+        .view-section { display: none; flex: 1; flex-direction: column; overflow: hidden; }
+        .active-view { display: flex; }
+
+        /* --- POS VIEW STYLES --- */
+        .input-dock { background: #34495e; padding: 10px; display: flex; flex-direction: column; gap: 8px; z-index: 10; flex-shrink: 0; }
         .input-row { display: flex; gap: 5px; }
+        input { padding: 10px; border: none; border-radius: 5px; font-weight: bold; outline: none; font-size: 14px; width: 100%; }
         
-        input { padding: 10px; border: none; border-radius: 5px; font-weight: bold; outline: none; font-size: 14px; }
-        #iName { flex: 2; }
-        #iQty { width: 50px; text-align: center; }
-        #iPrice { width: 70px; }
-        
-        /* BUTTONS */
         .btn { border: none; border-radius: 5px; cursor: pointer; color: white; display: flex; align-items: center; justify-content: center; }
         .btn-mic { background: #e67e22; width: 45px; }
         .btn-scan { background: #8e44ad; width: 45px; }
-        .btn-save { background: #16a085; width: 45px; font-size: 18px; } /* Save Icon */
-        .btn-add { background: #27ae60; flex: 1; font-weight: bold; font-size: 16px; text-transform: uppercase; }
+        .btn-add { background: #27ae60; flex: 1; font-weight: bold; font-size: 16px; }
 
-        /* STATUS BAR (Notification) */
-        #statusMsg { color: #f1c40f; font-size: 11px; text-align: center; display: none; margin-top: -5px; margin-bottom: 5px; }
-
-        /* BILL SCROLL AREA */
         .scroll-area { flex: 1; overflow-y: auto; background: #555; padding: 15px; display: flex; justify-content: center; }
-        
-        /* THE RECEIPT PAPER */
-        .paper-bill { width: 100%; max-width: 300px; background: #fff; min-height: 200px; padding: 10px; color: black; font-family: 'Courier New', monospace; font-weight: bold; font-size: 12px; position: relative; }
-        
-        .r-header { text-align: center; border-bottom: 2px dashed #000; padding-bottom: 5px; margin-bottom: 10px; }
-        .shop-name { font-size: 18px; font-weight: 900; text-transform: uppercase; margin-bottom: 2px; }
-        
-        .r-row { display: flex; justify-content: space-between; margin-bottom: 3px; }
-        .r-input { border: none; border-bottom: 1px dotted #000; width: 130px; font-family: inherit; font-size: 12px; font-weight: bold; outline: none; }
+        .paper-bill { width: 100%; max-width: 300px; background: #fff; min-height: 200px; padding: 10px; color: black; font-family: 'Courier New', monospace; font-weight: bold; font-size: 12px; }
         
         .r-table { width: 100%; border-collapse: collapse; margin-top: 5px; }
         .r-table th { border-bottom: 2px solid #000; text-align: left; font-size: 11px; }
         .r-table td { padding: 4px 0; border-bottom: 1px dotted #aaa; }
-        .del-icon { color: red; cursor: pointer; font-size: 14px; padding-left: 5px; }
-
-        .r-total-box { margin-top: 10px; border-top: 2px solid #000; padding-top: 5px; }
-        .r-grand { font-size: 16px; font-weight: 900; border-top: 1px solid #000; border-bottom: 1px solid #000; margin-top: 5px; padding: 5px 0; }
-        .r-footer { text-align: center; margin-top: 15px; font-size: 10px; }
-        .visit-box { border: 2px solid #000; padding: 5px; margin: 10px 0; font-size: 14px; font-weight: 900; display: inline-block; }
-
-        /* ACTION BAR (Raised for Mobile) */
-        .action-bar { background: #fff; height: auto; padding: 10px 10px 40px 10px; display: flex; justify-content: space-between; z-index: 100; flex-shrink: 0; box-shadow: 0 -2px 10px rgba(0,0,0,0.2); }
-        .action-btn { background: none; border: none; display: flex; flex-direction: column; align-items: center; font-size: 10px; font-weight: bold; color: #333; width: 23%; cursor: pointer; }
+        
+        .action-bar { background: #fff; height: auto; padding: 10px; display: flex; justify-content: space-between; z-index: 100; flex-shrink: 0; }
+        .action-btn { background: none; border: none; display: flex; flex-direction: column; align-items: center; font-size: 10px; font-weight: bold; color: #333; width: 23%; }
         .action-btn i { font-size: 20px; padding: 10px; border-radius: 10px; color: white; margin-bottom: 5px; }
         .btn-p-print i { background: #34495e; } .btn-p-pdf i { background: #e74c3c; } .btn-p-share i { background: #2980b9; } .btn-p-qr i { background: #f39c12; }
 
-        /* MODALS */
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 200; align-items: center; justify-content: center; flex-direction: column; }
-        .sidebar { position: fixed; top: 0; left: -250px; width: 250px; height: 100%; background: #2c3e50; transition: 0.3s; z-index: 300; padding-top: 60px; }
-        .sidebar a { display: block; padding: 15px; color: white; text-decoration: none; border-bottom: 1px solid #34495e; }
+        /* --- LIST & HISTORY VIEW STYLES --- */
+        .list-container { flex: 1; overflow-y: auto; padding: 10px; background: #ecf0f1; }
+        .search-box { padding: 10px; background: #34495e; position: sticky; top: 0; z-index: 5; }
+        .data-card { background: white; padding: 10px; margin-bottom: 10px; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; }
+        .card-info { font-size: 14px; color: #333; }
+        .card-title { font-weight: bold; font-size: 16px; color: #2c3e50; }
+        .card-actions { display: flex; gap: 10px; }
+        .btn-edit { background: #f39c12; padding: 5px 10px; border-radius: 3px; color: white; border: none; }
+        .btn-del { background: #c0392b; padding: 5px 10px; border-radius: 3px; color: white; border: none; }
+        .btn-view { background: #3498db; padding: 5px 10px; border-radius: 3px; color: white; border: none; }
+
+        /* SIDEBAR */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 200; }
+        .sidebar { position: fixed; top: 0; left: -250px; width: 250px; height: 100%; background: #2c3e50; transition: 0.3s; z-index: 300; padding-top: 60px; box-shadow: 2px 0 5px rgba(0,0,0,0.5); }
+        .sidebar a { display: block; padding: 15px; color: white; text-decoration: none; border-bottom: 1px solid #34495e; font-size: 16px; }
         .sidebar.active { left: 0; }
-        .overlay-click { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:250; display:none;}
+
+        /* MODALS */
+        .scanner-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; z-index: 400; flex-direction: column; align-items: center; justify-content: center; }
 
         @media print {
-            .app-header, .input-dock, .action-bar, .modal-overlay, .sidebar, .del-icon { display: none !important; }
+            .app-header, .input-dock, .action-bar, .modal-overlay, .sidebar, .search-box, .btn-del, .list-container { display: none !important; }
             body, .scroll-area { background: white; height: auto; display: block; overflow: visible; }
+            .view-section { display: none; }
+            #view-pos { display: block; } /* Only print POS view */
             .paper-bill { box-shadow: none; margin: 0; width: 100%; max-width: 58mm; border: none; padding: 0; }
-            .r-input { border: none; }
+            input { border: none; }
         }
     </style>
 </head>
 <body>
 
-    <div class="overlay-click" id="menuOverlay" onclick="toggleMenu()"></div>
+    <div class="modal-overlay" id="menuOverlay" onclick="toggleMenu()"></div>
     <div class="sidebar" id="sidebar">
-        <a href="#" onclick="location.reload()">🔄 New Bill</a>
-        <a href="#" onclick="clearDB()">🗑️ Clear Saved Products</a>
-        <a href="https://acsadarsh.github.io/Acs/">🌐 Connect to ACS</a>
-        <a href="https://wa.me/918252900810">📞 Contact ACS</a>
+        <a href="#" onclick="switchView('view-pos')"><i class="fas fa-calculator"></i> Billing (POS)</a>
+        <a href="#" onclick="switchView('view-products')"><i class="fas fa-boxes"></i> Product Listing (QR)</a>
+        <a href="#" onclick="switchView('view-history')"><i class="fas fa-history"></i> Bill History</a>
+        <a href="#" onclick="clearAllData()" style="color:#e74c3c;"><i class="fas fa-trash"></i> Reset All Data</a>
     </div>
 
     <div class="app-header">
         <div onclick="toggleMenu()"><i class="fas fa-bars" style="font-size:20px;"></i></div>
-        <div style="font-weight:bold;">KAMDEO POS</div>
+        <div style="font-weight:bold;" id="headerTitle">KAMDEO POS</div>
         <div style="font-size: 10px;">ACS</div>
     </div>
 
-    <div class="input-dock">
-        <div id="statusMsg"></div> <div class="input-row">
-            <input type="hidden" id="scanMemory"> 
-            
-            <input type="text" id="iName" placeholder="Item Name (बोलें/लिखें)">
-            <button class="btn btn-mic" onclick="startDictation()"><i class="fas fa-microphone"></i></button>
-            <button class="btn btn-scan" onclick="startScanner()"><i class="fas fa-barcode"></i></button>
+    <div id="view-pos" class="view-section active-view">
+        <div class="input-dock">
+            <div class="input-row">
+                <input type="text" id="iName" placeholder="Item Name (बोलें/लिखें)">
+                <button class="btn btn-mic" onclick="startDictation()"><i class="fas fa-microphone"></i></button>
+                <button class="btn btn-scan" onclick="startScanner('pos')"><i class="fas fa-barcode"></i></button>
+            </div>
+            <div class="input-row">
+                <input type="number" id="iPrice" placeholder="Rate">
+                <input type="number" id="iQty" placeholder="Qty" value="1">
+                <button class="btn btn-add" onclick="addItem()">ADD</button>
+            </div>
         </div>
-        <div class="input-row">
-            <input type="number" id="iPrice" placeholder="Rate">
-            <input type="number" id="iQty" placeholder="Qty" value="1">
-            <button class="btn btn-save" onclick="saveToMemory()" title="Save Details"><i class="fas fa-save"></i></button>
-            <button class="btn btn-add" onclick="addItem()">ADD</button>
+
+        <div class="scroll-area">
+            <div class="paper-bill" id="billPaper">
+                <div style="text-align:center; border-bottom:2px dashed #000; margin-bottom:10px;">
+                    <div style="font-size:18px; font-weight:900;">KAMDEO KIRANA STORE</div>
+                    <div>Itkhori, Dhankheri, 825408 JH</div>
+                    <div>Mo: 96615 15728</div>
+                </div>
+                <div style="display:flex; justify-content:space-between;"><span>Date: <span id="bDate"></span></span></div>
+                <div style="display:flex; align-items:center;">
+                    <span>Name: </span>
+                    <input type="text" id="cName" placeholder="Customer Name" style="border-bottom:1px dotted #000; width:130px;">
+                </div>
+                <table class="r-table" id="billTable">
+                    <thead><tr><th style="width:45%">ITEM</th><th style="width:20%">RATE</th><th style="width:10%">Q</th><th style="width:25%; text-align:right;">AMT</th><th></th></tr></thead>
+                    <tbody></tbody>
+                </table>
+                <div style="margin-top:10px; border-top:2px solid #000; padding-top:5px;">
+                    <div style="display:flex; justify-content:space-between;"><span>Total:</span><span id="subTotal">0.00</span></div>
+                    <div style="display:flex; justify-content:space-between;"><span>Disc:</span><span>- <input type="number" id="discountVal" style="width:40px; text-align:right; border-bottom:1px solid #000;" placeholder="0" onkeyup="updateTotal()"></span></div>
+                    <div style="font-size:16px; font-weight:900; border-top:1px solid #000; margin-top:5px; padding-top:5px; display:flex; justify-content:space-between;"><span>GRAND TOTAL:</span><span>₹ <span id="grandTotal">0.00</span></span></div>
+                </div>
+                <div style="text-align:center; margin-top:15px;">
+                    <div style="border:2px solid #000; padding:5px; display:inline-block; font-weight:bold;">VISIT AGAIN</div>
+                    <div style="font-size:10px; margin-top:5px; font-weight:bold;">ADARSH COMPUTER SERVICES & SOLVE</div>
+                </div>
+            </div>
         </div>
-    </div>
 
-    <div class="scroll-area">
-        <div class="paper-bill" id="billPaper">
-            <div class="r-header">
-                <div class="shop-name">KAMDEO KIRANA STORE</div>
-                <div>Itkhori, Dhankheri, 825408 JH</div>
-                <div>Mo: 96615 15728</div>
-                <div>Owner: KAMDEO PRAJAPATI</div>
-            </div>
-
-            <div class="r-row"><span>Date: <span id="bDate"></span></span></div>
-            <div class="r-row" style="align-items: center;">
-                <span>Name:</span>
-                <input type="text" class="r-input" id="cName" placeholder="Customer Name">
-            </div>
-
-            <table class="r-table" id="billTable">
-                <thead>
-                    <tr>
-                        <th style="width:45%">ITEM</th>
-                        <th style="width:20%">RATE</th>
-                        <th style="width:10%">Q</th>
-                        <th style="width:25%; text-align:right;">AMT</th>
-                        <th style="width:5%"></th>
-                    </tr>
-                </thead>
-                <tbody></tbody>
-            </table>
-
-            <div class="r-total-box">
-                <div class="r-row"><span>Sub Total:</span><span id="subTotal">0.00</span></div>
-                <div class="r-row"><span>Discount:</span><span>- <input type="number" id="discountVal" class="r-input" style="width:40px; text-align:right;" placeholder="0" onkeyup="updateTotal()"></span></div>
-                <div class="r-row r-grand"><span>GRAND TOTAL:</span><span>₹ <span id="grandTotal">0.00</span></span></div>
-            </div>
-
-            <div class="r-footer">
-                <div class="visit-box">VISIT AGAIN</div>
-                <div style="font-weight:800; margin-top:5px;">ADARSH COMPUTER SERVICES & SOLVE</div>
-                <div>POWERED BY ACS</div>
-            </div>
+        <div class="action-bar">
+            <button class="action-btn btn-p-print" onclick="processBill('print')"><i class="fas fa-print"></i> PRINT</button>
+            <button class="action-btn btn-p-pdf" onclick="processBill('pdf')"><i class="fas fa-file-pdf"></i> PDF</button>
+            <button class="action-btn btn-p-share" onclick="processBill('share')"><i class="fas fa-share-nodes"></i> SHARE</button>
+            <button class="action-btn btn-p-qr" onclick="showQR()"><i class="fas fa-qrcode"></i> QR</button>
         </div>
     </div>
 
-    <div class="action-bar">
-        <button class="action-btn btn-p-print" onclick="window.print()"><i class="fas fa-print"></i> PRINT</button>
-        <button class="action-btn btn-p-pdf" onclick="downloadPDF()"><i class="fas fa-file-pdf"></i> PDF</button>
-        <button class="action-btn btn-p-share" onclick="shareBill()"><i class="fas fa-share-nodes"></i> SHARE</button>
-        <button class="action-btn btn-p-qr" onclick="showQR()"><i class="fas fa-qrcode"></i> QR</button>
+    <div id="view-products" class="view-section">
+        <div class="search-box">
+            <div class="input-row">
+                <input type="text" id="prodSearch" placeholder="Search Product or Scan QR..." onkeyup="renderProductList()">
+                <button class="btn btn-scan" onclick="startScanner('product_add')"><i class="fas fa-qrcode"></i></button>
+            </div>
+            <button class="btn" style="background:#27ae60; width:100%; margin-top:5px;" onclick="addNewProductManual()">+ Add New Product</button>
+        </div>
+        <div class="list-container" id="productList">
+            </div>
     </div>
 
-    <div class="modal-overlay" id="scannerModal">
-        <div style="color:white; font-size:18px; margin-bottom:10px;">Scan Barcode</div>
+    <div id="view-history" class="view-section">
+        <div class="search-box">
+            <input type="text" id="histSearch" placeholder="Search Customer Name..." onkeyup="renderHistory()">
+        </div>
+        <div class="list-container" id="historyList">
+            </div>
+    </div>
+
+    <div class="scanner-modal" id="scannerModal">
+        <div style="color:white; font-size:18px; margin-bottom:10px;">Scanning...</div>
         <div id="reader" style="width:300px; height:300px; background:white;"></div>
-        <button onclick="closeScanner()" style="background:red; color:white; border:none; padding:10px; margin-top:20px; border-radius:5px;">CLOSE</button>
+        <button onclick="closeScanner()" style="background:red; color:white; border:none; padding:10px; margin-top:20px;">CLOSE</button>
     </div>
 
-    <div class="modal-overlay" id="qrModal">
+    <div id="qrModal" class="modal-overlay" style="align-items:center; justify-content:center; display:none;">
         <div style="background:white; padding:20px; border-radius:10px; text-align:center;">
             <h3>Scan to Pay</h3>
             <div id="qrcode"></div>
-            <button onclick="document.getElementById('qrModal').style.display='none'" style="background:#333; color:white; border:none; padding:10px; width:100%; margin-top:10px; border-radius:5px;">CLOSE</button>
+            <button onclick="document.getElementById('qrModal').style.display='none'" style="background:#333; color:white; border:none; padding:10px; width:100%; margin-top:10px;">CLOSE</button>
         </div>
     </div>
 
     <script>
+        // --- INITIALIZATION ---
         document.getElementById('bDate').innerText = new Date().toLocaleDateString('en-IN');
-        function toggleMenu() { document.getElementById('sidebar').classList.toggle('active'); document.getElementById('menuOverlay').style.display = document.getElementById('sidebar').classList.contains('active') ? 'block' : 'none'; }
+        let currentView = 'view-pos';
+        let scanMode = 'pos'; // 'pos', 'product_add', 'product_search'
 
-        // --- 1. MEMORY & DATABASE SYSTEM ---
-        function getSavedItem(code) {
-            const db = JSON.parse(localStorage.getItem('kamdeo_db') || '{}');
-            return db[code];
-        }
-
-        function saveToMemory() {
-            const code = document.getElementById('scanMemory').value;
-            const name = document.getElementById('iName').value;
-            const price = document.getElementById('iPrice').value;
-
-            if (code && name && price) {
-                const db = JSON.parse(localStorage.getItem('kamdeo_db') || '{}');
-                db[code] = { name: name, price: price };
-                localStorage.setItem('kamdeo_db', JSON.stringify(db));
-                alert("Product Saved! Next time it will auto-fill.");
-                document.getElementById('statusMsg').style.display = 'none';
-                document.getElementById('scanMemory').value = ''; // Clear memory
+        function toggleMenu() { 
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('menuOverlay');
+            if (sidebar.classList.contains('active')) {
+                sidebar.classList.remove('active'); overlay.style.display = 'none';
             } else {
-                alert("Scan a code first, then enter Name & Rate to save.");
+                sidebar.classList.add('active'); overlay.style.display = 'block';
             }
         }
 
-        function clearDB() {
-            if(confirm("Delete all saved products?")) {
-                localStorage.removeItem('kamdeo_db');
-                alert("Database Cleared.");
+        function switchView(viewId) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active-view'));
+            document.getElementById(viewId).classList.add('active-view');
+            toggleMenu(); // Close menu
+            
+            if(viewId === 'view-products') renderProductList();
+            if(viewId === 'view-history') renderHistory();
+        }
+
+        // --- DATABASE HELPERS ---
+        function getProducts() { return JSON.parse(localStorage.getItem('kamdeo_products') || '{}'); }
+        function saveProducts(data) { localStorage.setItem('kamdeo_products', JSON.stringify(data)); }
+        
+        function getHistoryData() { return JSON.parse(localStorage.getItem('kamdeo_history') || '[]'); }
+        function saveHistoryData(data) { localStorage.setItem('kamdeo_history', JSON.stringify(data)); }
+
+        // --- 1. PRODUCT LISTING LOGIC ---
+        function renderProductList() {
+            const list = document.getElementById('productList');
+            list.innerHTML = '';
+            const query = document.getElementById('prodSearch').value.toLowerCase();
+            const db = getProducts();
+
+            Object.keys(db).forEach(code => {
+                const p = db[code];
+                if (p.name.toLowerCase().includes(query) || code.includes(query)) {
+                    const div = document.createElement('div');
+                    div.className = 'data-card';
+                    div.innerHTML = `
+                        <div>
+                            <div class="card-title">${p.name}</div>
+                            <div class="card-info">Code: ${code} | Price: ₹${p.price}</div>
+                        </div>
+                        <div class="card-actions">
+                            <button class="btn-edit" onclick="editProduct('${code}')"><i class="fas fa-edit"></i></button>
+                            <button class="btn-del" onclick="deleteProduct('${code}')"><i class="fas fa-trash"></i></button>
+                        </div>
+                    `;
+                    list.appendChild(div);
+                }
+            });
+        }
+
+        function addNewProductManual() {
+            const code = prompt("Enter Product Code / Barcode Number:");
+            if(!code) return;
+            editProduct(code); // Reuse edit logic for new
+        }
+
+        function editProduct(code) {
+            const db = getProducts();
+            const current = db[code] || { name: '', price: '' };
+            
+            const newName = prompt("Enter Product Name:", current.name);
+            if (newName === null) return;
+            
+            const newPrice = prompt("Enter Price (Rate):", current.price);
+            if (newPrice === null) return;
+
+            if (newName && newPrice) {
+                db[code] = { name: newName, price: newPrice };
+                saveProducts(db);
+                renderProductList();
+                alert("Product Saved Successfully!");
             }
         }
 
-        // --- 2. SCANNER LOGIC ---
-        let scanner;
-        function startScanner() {
-            document.getElementById('scannerModal').style.display = 'flex';
-            scanner = new Html5Qrcode("reader");
-            scanner.start({ facingMode: "environment" }, { fps: 10, qrbox: 200 }, (code) => {
-                closeScanner();
-                handleScanResult(code);
-            }).catch(e => { console.log(e); closeScanner(); alert("Camera Error: Use HTTPS"); });
-        }
-        function closeScanner() { if(scanner) scanner.stop(); document.getElementById('scannerModal').style.display = 'none'; }
-
-        function handleScanResult(code) {
-            document.getElementById('scanMemory').value = code; // Remember the code
-            const item = getSavedItem(code);
-
-            if (item) {
-                // Item Found in DB
-                document.getElementById('iName').value = item.name;
-                document.getElementById('iPrice').value = item.price;
-                document.getElementById('statusMsg').style.display = 'none';
-                // Optional: Auto Add if you want
-            } else {
-                // New Item
-                document.getElementById('iName').value = ""; // Clear name box so user can type
-                document.getElementById('iPrice').value = "";
-                
-                const msg = document.getElementById('statusMsg');
-                msg.style.display = 'block';
-                msg.innerText = "New Item Scanned! Enter Name & Rate, then click Save (💾).";
-                
-                document.getElementById('iName').placeholder = "Enter Name for this Item";
-                document.getElementById('iName').focus();
+        function deleteProduct(code) {
+            if(confirm("Delete this product?")) {
+                const db = getProducts();
+                delete db[code];
+                saveProducts(db);
+                renderProductList();
             }
         }
 
-        // --- 3. MIC LOGIC (HTTPS REQUIRED) ---
-        function startDictation() {
-            if ('webkitSpeechRecognition' in window) {
-                const rec = new webkitSpeechRecognition();
-                rec.lang = 'hi-IN';
-                rec.start();
-                rec.onresult = e => document.getElementById('iName').value = e.results[0][0].transcript;
-                rec.onerror = e => alert("Mic Error. Check Permissions.");
-            } else { 
-                alert("Mic not supported. Please open this site via HTTPS (GitHub Pages)."); 
-            }
-        }
-
-        // --- 4. BILL LOGIC ---
+        // --- 2. POS BILLING LOGIC ---
         function addItem() {
             const name = document.getElementById('iName').value;
             const price = parseFloat(document.getElementById('iPrice').value);
             const qty = parseFloat(document.getElementById('iQty').value);
-            
-            if (!name || isNaN(price) || isNaN(qty)) { alert("Enter Name & Rate"); return; }
+            if (!name || isNaN(price) || isNaN(qty)) return;
 
             const total = price * qty;
             const tbody = document.getElementById('billTable').querySelector('tbody');
             const row = tbody.insertRow();
+            row.innerHTML = `<td>${name}</td><td>${price}</td><td>${qty}</td><td class="amt" data-val="${total}" style="text-align:right;">${total.toFixed(2)}</td><td style="text-align:center;"><i class="fas fa-times" style="color:red;" onclick="this.closest('tr').remove(); updateTotal();"></i></td>`;
             
-            // Note: We only insert NAME here, not the code.
-            row.innerHTML = `
-                <td>${name}</td>
-                <td style="text-align:center;">${price}</td>
-                <td style="text-align:center;">${qty}</td>
-                <td style="text-align:right;" class="row-amt" data-val="${total}">${total.toFixed(2)}</td>
-                <td style="text-align:center;"><i class="fas fa-times del-icon" onclick="deleteRow(this)"></i></td>
-            `;
-            
-            // Clear inputs
             document.getElementById('iName').value = '';
             document.getElementById('iPrice').value = '';
             document.getElementById('iQty').value = '1';
-            document.getElementById('scanMemory').value = '';
-            document.getElementById('statusMsg').style.display = 'none';
-            document.getElementById('iName').placeholder = "Item Name (बोलें/लिखें)";
-            
             updateTotal();
         }
 
-        function deleteRow(icon) { icon.closest('tr').remove(); updateTotal(); }
-        
         function updateTotal() {
             let sum = 0;
-            document.querySelectorAll('.row-amt').forEach(td => sum += parseFloat(td.getAttribute('data-val')));
+            document.querySelectorAll('.amt').forEach(td => sum += parseFloat(td.getAttribute('data-val')));
             document.getElementById('subTotal').innerText = sum.toFixed(2);
             const disc = parseFloat(document.getElementById('discountVal').value) || 0;
             document.getElementById('grandTotal').innerText = (sum - disc).toFixed(2);
         }
 
-        // --- 5. EXPORT & SHARE ---
+        // --- 3. BILL HISTORY LOGIC ---
+        function processBill(action) {
+            // Save Bill First
+            saveCurrentBillToHistory();
+            
+            // Then Perform Action
+            if(action === 'print') window.print();
+            if(action === 'pdf') downloadPDF();
+            if(action === 'share') shareBill();
+        }
+
+        function saveCurrentBillToHistory() {
+            const customer = document.getElementById('cName').value || "Unknown";
+            const total = document.getElementById('grandTotal').innerText;
+            const date = new Date().toLocaleString();
+            
+            // Gather items text for record
+            let itemsTxt = "";
+            document.querySelectorAll('#billTable tbody tr').forEach(row => {
+               itemsTxt += row.cells[0].innerText + ", "; 
+            });
+
+            const bill = {
+                id: Date.now(),
+                date: date,
+                customer: customer,
+                items: itemsTxt,
+                total: total
+            };
+
+            const hist = getHistoryData();
+            hist.unshift(bill); // Add to top
+            saveHistoryData(hist);
+            // alert("Bill Saved to History!"); // Optional feedback
+        }
+
+        function renderHistory() {
+            const list = document.getElementById('historyList');
+            list.innerHTML = '';
+            const query = document.getElementById('histSearch').value.toLowerCase();
+            const hist = getHistoryData();
+
+            hist.forEach(bill => {
+                if (bill.customer.toLowerCase().includes(query)) {
+                    const div = document.createElement('div');
+                    div.className = 'data-card';
+                    div.innerHTML = `
+                        <div>
+                            <div class="card-title">${bill.customer}</div>
+                            <div class="card-info" style="font-size:12px;">${bill.date}</div>
+                            <div class="card-info" style="color:#27ae60; font-weight:bold;">Total: ₹${bill.total}</div>
+                            <div style="font-size:10px; color:#777;">${bill.items.substring(0, 30)}...</div>
+                        </div>
+                        <div class="card-actions">
+                            <button class="btn-del" onclick="deleteHistory(${bill.id})"><i class="fas fa-trash"></i></button>
+                        </div>
+                    `;
+                    list.appendChild(div);
+                }
+            });
+        }
+
+        function deleteHistory(id) {
+            if(confirm("Delete this bill record?")) {
+                let hist = getHistoryData();
+                hist = hist.filter(b => b.id !== id);
+                saveHistoryData(hist);
+                renderHistory();
+            }
+        }
+
+        // --- SCANNERS & UTILS ---
+        let html5QrCode;
+        function startScanner(mode) {
+            scanMode = mode;
+            document.getElementById('scannerModal').style.display = 'flex';
+            html5QrCode = new Html5Qrcode("reader");
+            html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 200 }, onScanSuccess)
+                       .catch(err => { console.log(err); closeScanner(); alert("Camera Error"); });
+        }
+
+        function onScanSuccess(code) {
+            closeScanner();
+            
+            if (scanMode === 'pos') {
+                // Check if product exists
+                const db = getProducts();
+                if(db[code]) {
+                    document.getElementById('iName').value = db[code].name;
+                    document.getElementById('iPrice').value = db[code].price;
+                } else {
+                    document.getElementById('iName').value = code; // Just fill code
+                    alert("Product not in list. Enter details manually or Add in Product List.");
+                }
+            } else if (scanMode === 'product_add') {
+                // Go to Add Product Logic
+                editProduct(code);
+            }
+        }
+
+        function closeScanner() {
+            if (html5QrCode) html5QrCode.stop();
+            document.getElementById('scannerModal').style.display = 'none';
+        }
+
+        function clearAllData() {
+            if(confirm("WARNING: This will delete ALL Products and Bill History. Continue?")) {
+                localStorage.clear();
+                location.reload();
+            }
+        }
+
+        // --- STANDARD FUNCTIONS (Dictation, PDF, Share, QR) ---
+        function startDictation() {
+            if ('webkitSpeechRecognition' in window) {
+                const rec = new webkitSpeechRecognition();
+                rec.lang = 'hi-IN'; rec.start();
+                rec.onresult = e => document.getElementById('iName').value = e.results[0][0].transcript;
+            } else { alert("Use Chrome!"); }
+        }
+
         function downloadPDF() {
             const el = document.getElementById('billPaper');
-            document.querySelectorAll('.del-icon').forEach(e => e.style.display='none');
-            html2pdf().set({ margin:0, filename:'Kamdeo_Bill.pdf', html2canvas:{scale:2}, jsPDF:{unit:'mm', format:[70,200]} }).from(el).save().then(()=> document.querySelectorAll('.del-icon').forEach(e => e.style.display='inline'));
+            html2pdf().set({ margin:0, filename:'Bill.pdf', html2canvas:{scale:2}, jsPDF:{unit:'mm', format:[70,200]} }).from(el).save();
         }
 
         async function shareBill() {
-            document.querySelectorAll('.del-icon').forEach(e => e.style.display='none');
             const canvas = await html2canvas(document.getElementById('billPaper'), {scale:2, backgroundColor:"#ffffff"});
-            document.querySelectorAll('.del-icon').forEach(e => e.style.display='inline');
             canvas.toBlob(async (blob) => {
                 const file = new File([blob], "Bill.png", {type:"image/png"});
                 if(navigator.share) await navigator.share({files:[file]});
@@ -322,8 +431,7 @@
         function showQR() {
             document.getElementById('qrcode').innerHTML = "";
             document.getElementById('qrModal').style.display = 'flex';
-            const txt = `KAMDEO KIRANA\nTotal: ${document.getElementById('grandTotal').innerText}`;
-            new QRCode(document.getElementById('qrcode'), { text: txt, width: 150, height: 150 });
+            new QRCode(document.getElementById('qrcode'), {text:`KAMDEO KIRANA\nTotal: ${document.getElementById('grandTotal').innerText}`, width:150, height:150});
         }
     </script>
 </body>
