@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Kamdeo POS Stable</title>
+    <title>Kamdeo POS Perfect</title>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -11,90 +11,77 @@
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 
     <style>
-        /* --- LAYOUT ARCHITECTURE (Flexbox Fixed) --- */
+        /* --- CORE STYLES --- */
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        
         body { 
             margin: 0; padding: 0; 
             background-color: #2c3e50; 
             font-family: 'Segoe UI', sans-serif; 
-            height: 100vh; /* Full Height */
+            height: 100vh; 
             display: flex; 
-            flex-direction: column; /* Stack: Header -> Main -> Footer */
-            overflow: hidden; /* No Body Scroll */
+            flex-direction: column; 
+            overflow: hidden; 
         }
 
-        /* 1. HEADER (Fixed Height) */
+        /* 1. HEADER */
         .app-header { 
-            flex: 0 0 50px; /* Fixed 50px */
+            flex: 0 0 50px; 
             background: #1a252f; color: white; 
             padding: 0 15px; 
             display: flex; justify-content: space-between; align-items: center; 
             z-index: 2000; box-shadow: 0 2px 5px rgba(0,0,0,0.3); 
         }
 
-        /* 2. MAIN CONTENT AREA (Fills remaining space) */
+        /* 2. MAIN CONTAINER */
         .main-container {
-            flex: 1; /* Takes all available space */
+            flex: 1; 
             position: relative;
-            overflow: hidden; /* Manage scroll internally */
+            overflow: hidden; 
             display: flex;
             flex-direction: column;
         }
 
-        /* VIEW SECTIONS */
-        .view-section { 
-            display: none; 
-            flex-direction: column; 
-            height: 100%; 
-            width: 100%;
-        }
+        .view-section { display: none; flex-direction: column; height: 100%; width: 100%; }
         .active-view { display: flex; }
 
-        /* INPUT DOCK (Sticky Top inside Main) */
+        /* INPUT DOCK */
         .input-dock { 
-            flex: 0 0 auto; /* Height depends on content */
-            background: #34495e; 
-            padding: 10px; 
-            z-index: 10; 
+            flex: 0 0 auto; background: #34495e; padding: 10px; z-index: 10; 
             box-shadow: 0 2px 5px rgba(0,0,0,0.2); 
         }
         .input-row { display: flex; gap: 5px; margin-bottom: 5px; }
         input, select { padding: 10px; border: none; border-radius: 5px; font-weight: bold; outline: none; font-size: 14px; width: 100%; }
         
-        /* BUTTONS */
         .btn { border: none; border-radius: 5px; cursor: pointer; color: white; display: flex; align-items: center; justify-content: center; }
-        .btn-scan { background: #8e44ad; width: 70px; font-size: 22px; }
+        .btn-scan { background: #8e44ad; width: 80px; font-size: 24px; } /* BIG SCAN BUTTON */
         .btn-add { background: #27ae60; flex: 1; font-weight: bold; font-size: 16px; }
 
-        /* SCROLLABLE LIST/BILL AREA */
+        /* SCROLL AREA */
         .scroll-area { 
-            flex: 1; /* Takes remaining height */
-            overflow-y: auto; /* SCROLLS HERE */
-            background: #555; 
-            padding: 15px; 
-            -webkit-overflow-scrolling: touch; /* Smooth scroll iOS */
+            flex: 1; overflow-y: auto; background: #555; padding: 15px; 
+            -webkit-overflow-scrolling: touch; 
+            padding-bottom: 20px; /* Space for scroll end */
         }
         
-        /* PAPER BILL */
         .paper-wrapper { display: flex; justify-content: center; padding-bottom: 20px; }
         .paper-bill { 
-            width: 100%; max-width: 350px; background: #fff; 
-            min-height: 300px; padding: 10px; 
-            color: black; font-family: 'Courier New', monospace; font-weight: bold; font-size: 12px; 
+            width: 100%; max-width: 350px; background: #fff; min-height: 300px; 
+            padding: 10px; color: black; font-family: 'Courier New', monospace; font-weight: bold; font-size: 12px; 
             position: relative; box-shadow: 0 0 15px black; 
         }
         .r-table { width: 100%; border-collapse: collapse; margin-top: 5px; }
         .r-table th { border-bottom: 2px solid #000; text-align: left; font-size: 11px; }
         .r-table td { padding: 4px 0; border-bottom: 1px dotted #aaa; }
 
-        /* 3. FOOTER (Fixed Height) */
+        /* 3. FOOTER (ACTION BAR) - RAISED UP FIX */
         .action-bar { 
-            flex: 0 0 70px; /* Fixed 70px */
+            flex: 0 0 85px; /* Height increased */
             background: #fff; 
-            display: flex; justify-content: space-around; align-items: center; 
+            display: flex; justify-content: space-around; align-items: flex-start; 
             z-index: 2000; 
-            box-shadow: 0 -2px 10px rgba(0,0,0,0.3); border-top: 1px solid #ccc; 
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.3); border-top: 1px solid #ccc;
+            padding-top: 10px;
+            padding-bottom: 30px; /* Extra padding at bottom to avoid Nav Bar */
         }
         .action-btn { background: none; border: none; display: flex; flex-direction: column; align-items: center; cursor: pointer; }
         .action-btn i { font-size: 22px; padding: 8px; border-radius: 8px; color: white; margin-bottom: 2px; }
@@ -106,8 +93,8 @@
         .search-box { padding: 10px; background: #34495e; position: sticky; top: 0; z-index: 5; }
         .data-card { background: white; padding: 10px; margin-bottom: 10px; border-radius: 5px; display: flex; justify-content: space-between; align-items: center; border-left: 5px solid #27ae60; }
         .card-due { border-left: 5px solid #c0392b; }
-        .card-btn { padding: 5px 8px; border-radius: 4px; border: none; color: white; margin-left: 5px; cursor: pointer; }
-        .btn-view { background: #2980b9; } .btn-del { background: #c0392b; } .btn-wa { background: #25D366; }
+        .card-btn { padding: 5px 8px; border-radius: 4px; border: none; color: white; margin-left: 5px; cursor: pointer; font-size: 14px; }
+        .btn-view { background: #2980b9; } .btn-del { background: #c0392b; } .btn-wa { background: #25D366; } .btn-edit { background: #f39c12; }
 
         /* SIDEBAR & MODALS */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 5100; }
@@ -121,7 +108,7 @@
         
         #scannerModal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:black; z-index:6000; flex-direction:column; align-items:center; justify-content:center; }
 
-        /* REFRESH BUTTON STYLE */
+        /* REFRESH BTN */
         .refresh-btn { color: white; font-size: 18px; margin-left: 15px; cursor: pointer; }
 
         @media print {
@@ -220,12 +207,19 @@
             <div class="search-box"><input type="text" id="dueSearch" placeholder="🔍 Search Due..." onkeyup="renderList('dues')"></div>
             <div class="scroll-area"><div class="list-wrapper" id="duesListContainer"></div></div>
         </div>
+
         <div id="view-history" class="view-section">
             <div class="search-box"><input type="text" id="histSearch" placeholder="🔍 Search History..." onkeyup="renderList('history')"></div>
             <div class="scroll-area"><div class="list-wrapper" id="historyListContainer"></div></div>
         </div>
+
         <div id="view-products" class="view-section">
-            <div class="search-box"><div class="input-row"><input type="text" id="prodSearch" placeholder="Search Product..." onkeyup="renderProductList()"><button class="btn btn-scan" onclick="startScanner('product_add')"><i class="fas fa-plus"></i></button></div></div>
+            <div class="search-box">
+                <div class="input-row">
+                    <input type="text" id="prodSearch" placeholder="Search Product..." onkeyup="renderProductList()">
+                    <button class="btn btn-scan" onclick="startScanner('product_add')"><i class="fas fa-plus"></i></button>
+                </div>
+            </div>
             <div class="scroll-area"><div class="list-wrapper" id="productList"></div></div>
         </div>
 
@@ -260,11 +254,9 @@
     <div id="scannerModal"><div id="reader" style="width:300px; height:300px; background:white;"></div><button onclick="closeScanner()" style="background:red; color:white; border:none; padding:10px; margin-top:20px;">CLOSE</button></div>
 
     <script>
-        // --- SOUND ---
         const audioCtx=new(window.AudioContext||window.webkitAudioContext)();
         function playSound(t){if(audioCtx.state==='suspended')audioCtx.resume();const o=audioCtx.createOscillator();const g=audioCtx.createGain();o.connect(g);g.connect(audioCtx.destination);if(t==='scan'){o.type='sine';o.frequency.setValueAtTime(1200,audioCtx.currentTime);g.gain.setValueAtTime(0.1,audioCtx.currentTime);o.start();o.stop(audioCtx.currentTime+0.1);}else{o.type='triangle';o.frequency.setValueAtTime(600,audioCtx.currentTime);o.frequency.linearRampToValueAtTime(800,audioCtx.currentTime+0.1);g.gain.setValueAtTime(0.1,audioCtx.currentTime);o.start();o.stop(audioCtx.currentTime+0.3);}}
         
-        // --- CORE ---
         function updateTime(){const n=new Date();document.getElementById('liveDate').innerText=n.toLocaleDateString('en-IN');document.getElementById('liveTime').innerText=n.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});}
         setInterval(updateTime,1000); updateTime();
         
@@ -290,7 +282,6 @@
             document.getElementById('grandTotal').innerText=(sum-(parseFloat(document.getElementById('discountVal').value)||0)).toFixed(2);
         }
 
-        // --- RESET & AUTO SAVE ---
         function resetPOS() {
             document.getElementById('cName').value = ""; document.getElementById('iName').value = ""; document.getElementById('iPrice').value = ""; document.getElementById('iQty').value = "1"; document.getElementById('discountVal').value = "";
             document.getElementById('billTable').querySelector('tbody').innerHTML = ""; document.getElementById('subTotal').innerText = "0.00"; document.getElementById('grandTotal').innerText = "0.00"; document.getElementById('dueMark').style.display = 'none';
@@ -312,7 +303,7 @@
 
         async function generateBillImage() {
             document.querySelectorAll('.fa-times').forEach(e=>e.style.display='none');
-            const el=document.getElementById('billPaper'); 
+            const el=document.getElementById('billPaper'); el.scrollIntoView();
             const c=await html2canvas(el,{scale:2,backgroundColor:"#ffffff"});
             document.querySelectorAll('.fa-times').forEach(e=>e.style.display='inline');
             window.currCanvas=c; const img=document.createElement('img'); img.src=c.toDataURL();
@@ -330,8 +321,7 @@
         async function viewBill(b){
             document.querySelectorAll('.view-section').forEach(e=>e.classList.remove('active-view')); document.getElementById('view-pos').classList.add('active-view');
             document.getElementById('cName').value=b.customer; document.getElementById('grandTotal').innerText=b.total; document.getElementById('discountVal').value=b.discount||0; document.getElementById('billPayMode').innerText=b.payMode||'CASH'; document.getElementById('dueMark').style.display=b.isDue?'block':'none';
-            const tbody=document.getElementById('billTable').querySelector('tbody'); tbody.innerHTML='';
-            b.items.forEach(i=>{tbody.innerHTML+=`<tr><td>${i.name}</td><td>${i.price}</td><td>${i.qty}</td><td class="amt" data-val="${i.total}" style="text-align:right;">${i.total}</td><td></td></tr>`;});
+            const tbody=document.getElementById('billTable').querySelector('tbody'); tbody.innerHTML=''; b.items.forEach(i=>{tbody.innerHTML+=`<tr><td>${i.name}</td><td>${i.price}</td><td>${i.qty}</td><td class="amt" data-val="${i.total}" style="text-align:right;">${i.total}</td><td></td></tr>`;});
             updateTotal(); setTimeout(async()=>{await generateBillImage();},100);
         }
 
@@ -342,16 +332,19 @@
         
         let scanner;
         function startScanner(m){document.getElementById('scannerModal').style.display='flex';scanner=new Html5Qrcode("reader");scanner.start({facingMode:"environment"},{fps:10,qrbox:200},(c)=>{closeScanner();playSound('scan');const db=getProds();
-            if(m==='pos'){
-                if(db[c]){ document.getElementById('iName').value=db[c].name; document.getElementById('iPrice').value=db[c].price; }
-                else{ alert("Not Listed"); }
-            } else if(m==='product_add'){
-                if(db[c]){ alert("⚠️ ALREADY LISTED!\nName: "+db[c].name+"\nPrice: "+db[c].price); }
-                else { const n=prompt("New Item Name:"); const p=prompt("Price:"); if(n&&p){db[c]={name:n,price:p};localStorage.setItem('kamdeo_products',JSON.stringify(db));renderProductList();alert("Saved!");} }
-            }
+            if(m==='pos'){ if(db[c]){document.getElementById('iName').value=db[c].name;document.getElementById('iPrice').value=db[c].price;}else{alert("Not Listed");} }
+            else if(m==='product_add'){ if(db[c]){alert("Already Listed:\n"+db[c].name);}else{const n=prompt("Name:");const p=prompt("Price:");if(n&&p){db[c]={name:n,price:p};localStorage.setItem('kamdeo_products',JSON.stringify(db));renderProductList();alert("Saved!");}} }
         });}
         function closeScanner(){if(scanner)scanner.stop();document.getElementById('scannerModal').style.display='none';}
-        function renderProductList(){const l=document.getElementById('productList');l.innerHTML='';const db=getProds();const q=document.getElementById('prodSearch').value.toLowerCase();Object.keys(db).forEach(k=>{if(db[k].name.toLowerCase().includes(q))l.innerHTML+=`<div class="data-card"><b>${db[k].name}</b> ₹${db[k].price}</div>`;});}
+        
+        function renderProductList(){
+            const l=document.getElementById('productList');l.innerHTML='';const db=getProds();const q=document.getElementById('prodSearch').value.toLowerCase();
+            Object.keys(db).forEach(k=>{
+                if(db[k].name.toLowerCase().includes(q) || k.includes(q))
+                    l.innerHTML+=`<div class="data-card"><div><b>${db[k].name}</b><br><small>${k}</small></div><div>₹${db[k].price}<button class="card-btn btn-edit" onclick="editProd('${k}')"><i class="fas fa-edit"></i></button></div></div>`;
+            });
+        }
+        function editProd(k){ const db=getProds(); const n=prompt("Name:",db[k].name); const p=prompt("Price:",db[k].price); if(n&&p){db[k]={name:n,price:p};localStorage.setItem('kamdeo_products',JSON.stringify(db));renderProductList();} }
     </script>
 </body>
 </html>
