@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Kamdeo POS Ultra</title>
+    <title>Kamdeo POS Pro Max</title>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -11,14 +11,14 @@
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 
     <style>
-        /* --- APP THEME --- */
+        /* --- THEME --- */
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { margin: 0; padding: 0; background-color: #2c3e50; font-family: 'Segoe UI', sans-serif; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
 
         /* HEADER */
         .app-header { background: #1a252f; color: white; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; height: 50px; flex-shrink: 0; z-index: 1000; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
         
-        /* SIDEBAR MENU */
+        /* SIDEBAR */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 200; }
         .sidebar { position: fixed; top: 0; left: -280px; width: 280px; height: 100%; background: #2c3e50; transition: 0.3s; z-index: 300; padding-top: 60px; box-shadow: 2px 0 5px rgba(0,0,0,0.5); }
         .sidebar a { display: block; padding: 15px; color: white; text-decoration: none; border-bottom: 1px solid #34495e; font-size: 15px; display: flex; align-items: center; gap: 10px; }
@@ -28,8 +28,8 @@
         .view-section { display: none; flex: 1; flex-direction: column; overflow: hidden; }
         .active-view { display: flex; }
 
-        /* POS INPUT DOCK */
-        .input-dock { background: #34495e; padding: 10px; display: flex; flex-direction: column; gap: 8px; z-index: 10; flex-shrink: 0; border-bottom: 1px solid #444; }
+        /* INPUT DOCK */
+        .input-dock { background: #34495e; padding: 10px; display: flex; flex-direction: column; gap: 8px; z-index: 10; flex-shrink: 0; }
         .input-row { display: flex; gap: 5px; }
         input, select { padding: 10px; border: none; border-radius: 5px; font-weight: bold; outline: none; font-size: 14px; width: 100%; }
         
@@ -38,69 +38,71 @@
         .btn-scan { background: #8e44ad; width: 45px; }
         .btn-add { background: #27ae60; flex: 1; font-weight: bold; font-size: 16px; }
 
-        /* SCROLL AREA */
+        /* SCROLL AREA & PAPER BILL */
         .scroll-area { flex: 1; overflow-y: auto; background: #555; padding: 15px; display: flex; justify-content: center; position: relative; }
         
-        /* --- THE BILL RECEIPT --- */
-        .paper-bill { width: 100%; max-width: 320px; background: #fff; min-height: 200px; padding: 10px; color: black; font-family: 'Courier New', monospace; font-weight: bold; font-size: 12px; position: relative; box-shadow: 0 0 15px black; }
+        .paper-bill { 
+            width: 100%; 
+            max-width: 320px; 
+            background: #fff; 
+            /* Fix for Height Issue: Auto height allows it to grow */
+            height: auto; 
+            min-height: 200px; 
+            padding: 10px; 
+            color: black; 
+            font-family: 'Courier New', monospace; 
+            font-weight: bold; 
+            font-size: 12px; 
+            position: relative; 
+            box-shadow: 0 0 15px black;
+            margin-bottom: 20px; /* Space at bottom */
+        }
         
         .r-header { text-align: center; border-bottom: 2px dashed #000; padding-bottom: 5px; margin-bottom: 10px; }
         .r-table { width: 100%; border-collapse: collapse; margin-top: 5px; }
         .r-table th { border-bottom: 2px solid #000; text-align: left; font-size: 11px; }
         .r-table td { padding: 4px 0; border-bottom: 1px dotted #aaa; }
 
-        /* DIGITAL MOHAR (SEAL) */
+        /* DIGITAL MOHAR */
         .digital-seal {
-            margin-top: 20px;
-            width: 100px; height: 100px;
-            border: 3px solid #d63031;
-            border-radius: 50%;
+            margin-top: 20px; width: 100px; height: 100px; border: 3px solid #d63031; border-radius: 50%;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
-            color: #d63031;
-            font-weight: 900;
-            font-size: 10px;
-            transform: rotate(-15deg);
-            margin-left: auto; margin-right: auto;
-            position: relative;
-            background: rgba(255, 255, 255, 0.8);
+            color: #d63031; font-weight: 900; font-size: 10px; transform: rotate(-15deg);
+            margin-left: auto; margin-right: auto; background: rgba(255, 255, 255, 0.8);
         }
-        .seal-inner { border: 1px solid #d63031; width: 90%; height: 90%; border-radius: 50%; display: flex; flex-direction: column; justify-content: center; align-items: center; }
 
-        /* BOTTOM BAR (High Visibility) */
+        /* BOTTOM BAR */
         .action-bar { 
-            background: #222; /* Dark background */
-            height: auto; 
-            padding: 12px 10px 40px 10px; 
-            display: flex; justify-content: space-between; z-index: 100; flex-shrink: 0; 
-            box-shadow: 0 -4px 10px rgba(0,0,0,0.3);
-            border-top: 1px solid #444;
+            background: #222; height: auto; padding: 12px 10px 40px 10px; 
+            display: flex; justify-content: space-between; z-index: 100; flex-shrink: 0; border-top: 1px solid #444;
         }
         .action-btn { background: none; border: none; display: flex; flex-direction: column; align-items: center; width: 23%; cursor: pointer; }
         .action-btn i { font-size: 22px; padding: 10px; border-radius: 12px; color: white; margin-bottom: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.5); }
-        .action-btn span { color: white; font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; }
-
-        /* COLORS for Buttons */
-        .btn-gen i { background: #2980b9; } /* Blue */
-        .btn-prt i { background: #7f8c8d; } /* Grey */
-        .btn-shr i { background: #27ae60; } /* Green */
-        .btn-due i { background: #c0392b; } /* Red */
+        .action-btn span { color: white; font-size: 11px; font-weight: bold; }
+        .btn-gen i { background: #2980b9; } .btn-prt i { background: #7f8c8d; } .btn-shr i { background: #27ae60; } .btn-due i { background: #c0392b; }
 
         /* LISTS */
         .list-container { flex: 1; overflow-y: auto; padding: 10px; background: #ecf0f1; padding-bottom: 100px; }
         .search-box { padding: 10px; background: #34495e; position: sticky; top: 0; z-index: 5; }
         .data-card { background: white; padding: 12px; margin-bottom: 10px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         .card-due { border-left: 6px solid #c0392b; }
-        .btn-wa { background: #25D366; color: white; border: none; padding: 5px 10px; border-radius: 4px; font-weight: bold; margin-left: 5px; cursor: pointer; }
-
-        /* FULL IMAGE PREVIEW MODAL */
-        #imgPreviewModal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.95); z-index: 2000; flex-direction: column; align-items: center; justify-content: center; }
-        #imgPreviewModal img { max-width: 95%; max-height: 80vh; border: 2px solid white; }
         
+        /* Buttons in List */
+        .card-btn { padding: 6px 10px; border-radius: 4px; border: none; color: white; margin-left: 5px; cursor: pointer; font-size: 14px; }
+        .btn-view { background: #2980b9; } /* Blue View Button */
+        .btn-del { background: #c0392b; }
+        .btn-wa { background: #25D366; }
+
+        /* PREVIEW MODAL (Fix for viewing history) */
+        #imgPreviewModal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.95); z-index: 2000; flex-direction: column; align-items: center; justify-content: center; }
+        #imgContainer { max-height: 80vh; overflow-y: auto; text-align: center; }
+        #imgContainer img { max-width: 95%; border: 2px solid white; }
+
         /* SCANNER MODAL */
         #scannerModal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:black; z-index:3000; flex-direction:column; align-items:center; justify-content:center; }
 
         @media print {
-            .app-header, .input-dock, .action-bar, .sidebar, .search-box, .btn-wa { display: none !important; }
+            .app-header, .input-dock, .action-bar, .sidebar, .search-box, .card-btn { display: none !important; }
             body, .scroll-area { background: white; height: auto; display: block; overflow: visible; }
             #view-pos { display: block; }
             .paper-bill { box-shadow: none; margin: 0; width: 100%; max-width: 58mm; border: none; padding: 0; }
@@ -115,15 +117,12 @@
         <a href="#" onclick="switchView('view-dues')">📕 <b>Due List (Udhaar)</b></a>
         <a href="#" onclick="switchView('view-products')">📦 Product Listing</a>
         <a href="#" onclick="switchView('view-history')">📜 Bill History</a>
-        <a href="#" onclick="backupData()">☁️ Backup Data (Drive)</a>
-        <hr style="border-color:#444; width:100%;">
-        <a href="https://acsadarsh.github.io/Acs/" target="_blank">🔗 Connect ACS</a>
-        <a href="https://wa.me/918252900810?text=Recording%20to%20Kamdeo%20Kirana%20Store" target="_blank">🆘 Help Center (WhatsApp)</a>
+        <a href="https://wa.me/918252900810?text=Help" target="_blank">🆘 Help Center</a>
     </div>
 
     <div class="app-header">
         <div onclick="toggleMenu()"><i class="fas fa-bars" style="font-size:22px;"></i></div>
-        <div style="font-weight:bold; font-size:18px;">KAMDEO POS ULTRA</div>
+        <div style="font-weight:bold; font-size:18px;">KAMDEO POS PRO</div>
         <div style="font-size: 11px; font-weight:bold;">ACS</div>
     </div>
 
@@ -183,7 +182,7 @@
                 </div>
                 
                 <div class="digital-seal">
-                    <div class="seal-inner">
+                    <div style="border:1px solid #d63031; width:90%; height:90%; border-radius:50%; display:flex; flex-direction:column; justify-content:center; align-items:center;">
                         <div>KAMDEO</div>
                         <div style="font-size:14px; border-top:1px solid red; border-bottom:1px solid red;">ACS</div>
                         <div>STORE</div>
@@ -198,34 +197,30 @@
 
         <div class="action-bar">
             <button class="action-btn btn-gen" onclick="generateBillImage()">
-                <i class="fas fa-image"></i>
-                <span>GENERATE BILL</span>
+                <i class="fas fa-image"></i><span>BILL</span>
             </button>
             <button class="action-btn btn-prt" onclick="window.print()">
-                <i class="fas fa-print"></i>
-                <span>PRINT</span>
+                <i class="fas fa-print"></i><span>PRINT</span>
             </button>
             <button class="action-btn btn-shr" onclick="shareBill()">
-                <i class="fas fa-share-alt"></i>
-                <span>SHARE</span>
+                <i class="fas fa-share-alt"></i><span>SHARE</span>
             </button>
             <button class="action-btn btn-due" onclick="addToDue()">
-                <i class="fas fa-user-clock"></i>
-                <span>ADD DUE</span>
+                <i class="fas fa-user-clock"></i><span>ADD DUE</span>
             </button>
         </div>
     </div>
 
     <div id="view-dues" class="view-section">
         <div class="search-box">
-            <input type="text" id="dueSearch" placeholder="🔍 Search Customer..." onkeyup="renderList('dues')">
+            <input type="text" id="dueSearch" placeholder="🔍 Search Due Customer..." onkeyup="renderList('dues')">
         </div>
         <div class="list-container" id="duesListContainer"></div>
     </div>
 
     <div id="view-history" class="view-section">
         <div class="search-box">
-            <input type="text" id="histSearch" placeholder="🔍 Search History..." onkeyup="renderList('history')">
+            <input type="text" id="histSearch" placeholder="🔍 Search Bill History..." onkeyup="renderList('history')">
         </div>
         <div class="list-container" id="historyListContainer"></div>
     </div>
@@ -243,208 +238,174 @@
     <div id="imgPreviewModal">
         <div style="color:white; margin-bottom:10px;">Generated Bill</div>
         <div id="imgContainer"></div>
-        <button onclick="document.getElementById('imgPreviewModal').style.display='none'" style="background:red; color:white; border:none; padding:10px 30px; margin-top:20px; font-size:16px;">CLOSE X</button>
+        <div style="margin-top:20px; display:flex; gap:10px;">
+            <button onclick="shareImageToDrive()" style="background:#2ecc71; color:white; border:none; padding:10px 20px; font-size:16px; border-radius:5px;"><i class="fab fa-google-drive"></i> Save to Drive / Share</button>
+            <button onclick="document.getElementById('imgPreviewModal').style.display='none'" style="background:red; color:white; border:none; padding:10px 20px; font-size:16px; border-radius:5px;">Close</button>
+        </div>
     </div>
 
-    <div id="scannerModal">
-        <div id="reader" style="width:300px; height:300px; background:white;"></div>
-        <button onclick="closeScanner()" style="background:red; color:white; border:none; padding:10px; margin-top:20px;">CLOSE</button>
-    </div>
+    <div id="scannerModal"><div id="reader" style="width:300px; height:300px; background:white;"></div><button onclick="closeScanner()" style="background:red; color:white; border:none; padding:10px; margin-top:20px;">CLOSE</button></div>
 
     <script>
-        // --- TIME & DATE ---
-        function updateTime() {
-            const now = new Date();
-            document.getElementById('liveDate').innerText = now.toLocaleDateString('en-IN');
-            document.getElementById('liveTime').innerText = now.toLocaleTimeString('en-IN', {hour: '2-digit', minute:'2-digit'});
-        }
-        setInterval(updateTime, 1000);
-        updateTime();
+        // --- TIME ---
+        function updateTime() { const now=new Date(); document.getElementById('liveDate').innerText=now.toLocaleDateString('en-IN'); document.getElementById('liveTime').innerText=now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}); }
+        setInterval(updateTime,1000); updateTime();
 
         // --- NAVIGATION ---
-        function toggleMenu() { 
-            const sb = document.getElementById('sidebar');
-            const ov = document.getElementById('menuOverlay');
-            if (sb.classList.contains('active')) { sb.classList.remove('active'); ov.style.display = 'none'; } 
-            else { sb.classList.add('active'); ov.style.display = 'block'; }
-        }
-        function switchView(view) {
-            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active-view'));
-            document.getElementById(view).classList.add('active-view');
-            toggleMenu();
-            if(view === 'view-dues') renderList('dues');
-            if(view === 'view-history') renderList('history');
-            if(view === 'view-products') renderProductList();
-        }
+        function toggleMenu() { const s=document.getElementById('sidebar'); const o=document.getElementById('menuOverlay'); if(s.classList.contains('active')){s.classList.remove('active');o.style.display='none';}else{s.classList.add('active');o.style.display='block';} }
+        function switchView(view) { document.querySelectorAll('.view-section').forEach(e=>e.classList.remove('active-view')); document.getElementById(view).classList.add('active-view'); toggleMenu(); if(view==='view-dues')renderList('dues'); if(view==='view-history')renderList('history'); if(view==='view-products')renderProductList(); }
 
-        // --- DATA HANDLING ---
-        function getData(key) { return JSON.parse(localStorage.getItem(key) || '[]'); }
-        function saveData(key, data) { localStorage.setItem(key, JSON.stringify(data)); }
-        function getProds() { return JSON.parse(localStorage.getItem('kamdeo_products') || '{}'); }
+        // --- DATA ---
+        function getData(key) { return JSON.parse(localStorage.getItem(key)||'[]'); }
+        function saveData(key,data) { localStorage.setItem(key,JSON.stringify(data)); }
+        function getProds() { return JSON.parse(localStorage.getItem('kamdeo_products')||'{}'); }
 
-        // --- BILL LOGIC ---
-        document.getElementById('payMode').addEventListener('change', function() {
-            document.getElementById('billPayMode').innerText = this.value;
-        });
-
+        // --- BILL ---
+        document.getElementById('payMode').addEventListener('change',function(){ document.getElementById('billPayMode').innerText=this.value; });
         function addItem() {
-            const name = document.getElementById('iName').value;
-            const price = parseFloat(document.getElementById('iPrice').value);
-            const qty = parseFloat(document.getElementById('iQty').value);
-            if (!name || isNaN(price) || isNaN(qty)) return;
-
-            const total = price * qty;
-            const tbody = document.getElementById('billTable').querySelector('tbody');
-            const row = tbody.insertRow();
-            row.innerHTML = `<td>${name}</td><td>${price}</td><td>${qty}</td><td class="amt" data-val="${total}" style="text-align:right;">${total.toFixed(2)}</td><td style="text-align:center;"><i class="fas fa-times" style="color:red;" onclick="this.closest('tr').remove(); updateTotal();"></i></td>`;
-            
-            document.getElementById('iName').value = ''; document.getElementById('iPrice').value = ''; document.getElementById('iQty').value = '1';
-            updateTotal();
+            const n=document.getElementById('iName').value; const p=parseFloat(document.getElementById('iPrice').value); const q=parseFloat(document.getElementById('iQty').value);
+            if(!n||isNaN(p)||isNaN(q))return;
+            const t=p*q; const row=document.getElementById('billTable').querySelector('tbody').insertRow();
+            row.innerHTML=`<td>${n}</td><td>${p}</td><td>${q}</td><td class="amt" data-val="${t}" style="text-align:right;">${t.toFixed(2)}</td><td style="text-align:center;"><i class="fas fa-times" style="color:red;" onclick="this.closest('tr').remove();updateTotal();"></i></td>`;
+            document.getElementById('iName').value=''; document.getElementById('iPrice').value=''; document.getElementById('iQty').value='1'; updateTotal();
         }
-
         function updateTotal() {
-            let sum = 0;
-            document.querySelectorAll('.amt').forEach(td => sum += parseFloat(td.getAttribute('data-val')));
-            document.getElementById('subTotal').innerText = sum.toFixed(2);
-            document.getElementById('grandTotal').innerText = (sum - (parseFloat(document.getElementById('discountVal').value)||0)).toFixed(2);
+            let sum=0; document.querySelectorAll('.amt').forEach(t=>sum+=parseFloat(t.getAttribute('data-val')));
+            document.getElementById('subTotal').innerText=sum.toFixed(2);
+            document.getElementById('grandTotal').innerText=(sum-(parseFloat(document.getElementById('discountVal').value)||0)).toFixed(2);
         }
 
-        // --- GENERATE / SAVE / DUE ---
-        async function generateBillImage() {
-            document.querySelectorAll('.fa-times').forEach(el => el.style.display = 'none'); // Hide delete icons
-            const canvas = await html2canvas(document.getElementById('billPaper'), {scale: 2});
-            document.querySelectorAll('.fa-times').forEach(el => el.style.display = 'inline'); // Show back
-            
-            const img = document.createElement('img');
-            img.src = canvas.toDataURL();
-            const cont = document.getElementById('imgContainer');
-            cont.innerHTML = ''; cont.appendChild(img);
-            document.getElementById('imgPreviewModal').style.display = 'flex';
-            
-            // Auto Save to History
-            saveBillRecord(false);
-        }
-
-        function addToDue() {
-            const cust = document.getElementById('cName').value;
-            if(!cust) { alert("Enter Customer Name for Due!"); return; }
-            
-            document.getElementById('dueMark').style.display = 'block'; // Show Stamp
-            saveBillRecord(true); // Save as Due
-            alert("Added to Due List!");
-            setTimeout(() => document.getElementById('dueMark').style.display = 'none', 2000);
-        }
-
-        function saveBillRecord(isDue) {
-            const customer = document.getElementById('cName').value || "Unknown";
-            const total = document.getElementById('grandTotal').innerText;
-            const date = new Date().toLocaleString();
-            let items = "";
-            document.querySelectorAll('#billTable tbody tr').forEach(row => { items += row.cells[0].innerText + ", "; });
-
-            const record = { id: Date.now(), date, customer, total, items, isDue };
-            
-            if(isDue) {
-                let dues = getData('kamdeo_dues'); dues.unshift(record); saveData('kamdeo_dues', dues);
-            } else {
-                let hist = getData('kamdeo_history'); hist.unshift(record); saveData('kamdeo_history', hist);
-            }
-        }
-
-        // --- REMINDER & LISTS ---
-        function sendReminder(name, total) {
-            const text = `Hello ${name}, your pending amount at Kamdeo Kirana Store is Rs ${total}. Please pay soon.`;
-            window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
-        }
-
+        // --- LISTS & HISTORY VIEW ---
         function renderList(type) {
-            const container = document.getElementById(type === 'dues' ? 'duesListContainer' : 'historyListContainer');
-            const query = document.getElementById(type === 'dues' ? 'dueSearch' : 'histSearch').value.toLowerCase();
-            const data = getData(type === 'dues' ? 'kamdeo_dues' : 'kamdeo_history');
-            
-            container.innerHTML = '';
+            const cont = document.getElementById(type==='dues'?'duesListContainer':'historyListContainer');
+            const q = document.getElementById(type==='dues'?'dueSearch':'histSearch').value.toLowerCase();
+            const data = getData(type==='dues'?'kamdeo_dues':'kamdeo_history');
+            cont.innerHTML = '';
             data.forEach(bill => {
-                if(bill.customer.toLowerCase().includes(query)) {
-                    let html = `
+                if(bill.customer.toLowerCase().includes(q)) {
+                    cont.innerHTML += `
                         <div class="data-card ${type==='dues'?'card-due':''}">
                             <div>
                                 <div style="font-weight:bold; font-size:16px;">${bill.customer}</div>
-                                <div style="font-size:12px; color:#555;">${bill.date}</div>
-                                <div style="color:${type==='dues'?'#c0392b':'#27ae60'}; font-weight:bold;">₹${bill.total}</div>
+                                <div style="font-size:12px; color:#555;">${bill.date} | ₹${bill.total}</div>
                             </div>
                             <div style="display:flex;">
-                                ${type==='dues' ? `<button class="btn-wa" onclick="sendReminder('${bill.customer}', '${bill.total}')"><i class="fab fa-whatsapp"></i> Reminder</button>` : ''}
-                                <button class="btn-wa" style="background:#c0392b; margin-left:5px;" onclick="deleteRecord('${type}', ${bill.id})"><i class="fas fa-trash"></i></button>
-                                ${type==='dues' ? `<button class="btn-wa" style="background:#2980b9;" onclick="markPaid(${bill.id})">Paid</button>` : ''}
+                                <button class="card-btn btn-view" onclick='reconstructBill(${JSON.stringify(bill)})'><i class="fas fa-eye"></i></button>
+                                ${type==='dues'?`<button class="card-btn btn-wa" onclick="sendReminder('${bill.customer}','${bill.total}')"><i class="fab fa-whatsapp"></i></button>`:''}
+                                <button class="card-btn btn-del" onclick="deleteRec('${type}',${bill.id})"><i class="fas fa-trash"></i></button>
+                                ${type==='dues'?`<button class="card-btn" style="background:#2ecc71;" onclick="markPaid(${bill.id})">Paid</button>`:''}
                             </div>
                         </div>`;
-                    container.innerHTML += html;
                 }
             });
         }
 
-        function markPaid(id) {
-            if(confirm("Mark as PAID?")) {
-                let dues = getData('kamdeo_dues');
-                let bill = dues.find(b => b.id === id);
-                if(bill) {
-                    bill.isDue = false;
-                    let hist = getData('kamdeo_history'); hist.unshift(bill); saveData('kamdeo_history', hist);
-                    dues = dues.filter(b => b.id !== id); saveData('kamdeo_dues', dues);
-                    renderList('dues');
-                }
+        // --- RECONSTRUCT & VIEW BILL ---
+        function reconstructBill(bill) {
+            // Fill current bill area with data from history
+            document.getElementById('cName').value = bill.customer;
+            document.getElementById('grandTotal').innerText = bill.total;
+            document.getElementById('discountVal').value = bill.discount || 0;
+            document.getElementById('billPayMode').innerText = bill.payMode || 'CASH';
+            
+            // Clear table and fill
+            const tbody = document.getElementById('billTable').querySelector('tbody');
+            tbody.innerHTML = '';
+            bill.items.forEach(item => {
+                tbody.innerHTML += `<tr><td>${item.name}</td><td>${item.price}</td><td>${item.qty}</td><td class="amt" style="text-align:right;">${item.total}</td><td></td></tr>`;
+            });
+            updateTotal();
+
+            // Set Due Mark if needed
+            document.getElementById('dueMark').style.display = bill.isDue ? 'block' : 'none';
+
+            // Open Modal with Image
+            generateBillImage();
+        }
+
+        async function generateBillImage() {
+            document.querySelectorAll('.fa-times').forEach(e=>e.style.display='none');
+            // Ensure full height capture
+            const element = document.getElementById('billPaper');
+            const canvas = await html2canvas(element, {scale:2, backgroundColor:"#ffffff"});
+            document.querySelectorAll('.fa-times').forEach(e=>e.style.display='inline');
+            
+            // Store canvas globally for sharing
+            window.currentBillCanvas = canvas;
+
+            const img = document.createElement('img'); img.src = canvas.toDataURL();
+            const c = document.getElementById('imgContainer'); c.innerHTML=''; c.appendChild(img);
+            document.getElementById('imgPreviewModal').style.display='flex';
+            
+            // Auto-save logic (only if new bill)
+            // Note: We don't save duplicates when viewing history
+        }
+
+        // --- SAVE TO DRIVE / SHARE ---
+        function shareImageToDrive() {
+            if(window.currentBillCanvas) {
+                window.currentBillCanvas.toBlob(async blob => {
+                    const file = new File([blob], "KamdeoBill.png", { type: "image/png" });
+                    if(navigator.share) {
+                        try {
+                            await navigator.share({
+                                files: [file],
+                                title: 'Kamdeo Bill',
+                                text: 'Save to Drive or Share on WhatsApp'
+                            });
+                        } catch(err) { console.log(err); }
+                    } else {
+                        const a = document.createElement('a'); a.href = window.currentBillCanvas.toDataURL(); a.download = 'KamdeoBill.png'; a.click();
+                    }
+                });
             }
         }
 
-        function deleteRecord(type, id) {
-            if(confirm("Delete?")) {
-                let key = type === 'dues' ? 'kamdeo_dues' : 'kamdeo_history';
-                let data = getData(key).filter(b => b.id !== id);
-                saveData(key, data);
-                renderList(type);
-            }
+        // --- SAVE RECORD ---
+        function addToDue() {
+            const c = document.getElementById('cName').value; if(!c) {alert("Name Required"); return;}
+            document.getElementById('dueMark').style.display='block';
+            saveRec(true);
+            alert("Added to Due!");
+            setTimeout(()=>document.getElementById('dueMark').style.display='none', 2000);
         }
 
-        // --- BACKUP DATA ---
-        function backupData() {
-            const allData = {
-                products: JSON.parse(localStorage.getItem('kamdeo_products') || '{}'),
-                history: JSON.parse(localStorage.getItem('kamdeo_history') || '[]'),
-                dues: JSON.parse(localStorage.getItem('kamdeo_dues') || '[]')
-            };
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(allData));
-            const downloadAnchorNode = document.createElement('a');
-            downloadAnchorNode.setAttribute("href", dataStr);
-            downloadAnchorNode.setAttribute("download", "kamdeo_backup.json");
-            document.body.appendChild(downloadAnchorNode);
-            downloadAnchorNode.click();
-            downloadAnchorNode.remove();
-            alert("Backup Downloaded! Please upload this file to your Google Drive manually.");
+        function saveRec(isDue) {
+            const c = document.getElementById('cName').value || "Unknown";
+            const t = document.getElementById('grandTotal').innerText;
+            const d = document.getElementById('discountVal').value;
+            const pm = document.getElementById('payMode').value;
+            const dt = new Date().toLocaleString();
+            let items = [];
+            document.querySelectorAll('#billTable tbody tr').forEach(row => {
+                items.push({ name: row.cells[0].innerText, price: row.cells[1].innerText, qty: row.cells[2].innerText, total: row.cells[3].innerText });
+            });
+            const rec = { id:Date.now(), date:dt, customer:c, total:t, discount:d, payMode:pm, items:items, isDue:isDue };
+            
+            const key = isDue ? 'kamdeo_dues' : 'kamdeo_history';
+            let data = getData(key); data.unshift(rec); saveData(key, data);
         }
 
         // --- UTILS ---
-        function startDictation() { if('webkitSpeechRecognition' in window) { const r=new webkitSpeechRecognition(); r.lang='hi-IN'; r.start(); r.onresult=e=>document.getElementById('iName').value=e.results[0][0].transcript; } else alert("Use Chrome"); }
-        async function shareBill() { const c=await html2canvas(document.getElementById('billPaper'),{scale:2}); c.toBlob(async b=>{ if(navigator.share) navigator.share({files:[new File([b],"Bill.png",{type:"image/png"})]}); }); }
+        function sendReminder(n,t) { window.open(`https://wa.me/?text=Hello ${n}, Pending Amount at Kamdeo Store: Rs ${t}. Please pay.`, '_blank'); }
+        function deleteRec(type,id) { if(confirm("Delete?")){ let d=getData(type==='dues'?'kamdeo_dues':'kamdeo_history').filter(b=>b.id!==id); saveData(type==='dues'?'kamdeo_dues':'kamdeo_history', d); renderList(type); } }
+        function markPaid(id) {
+             let dues = getData('kamdeo_dues'); let bill = dues.find(b=>b.id===id);
+             if(bill){ bill.isDue=false; let h=getData('kamdeo_history'); h.unshift(bill); saveData('kamdeo_history',h); saveData('kamdeo_dues', dues.filter(b=>b.id!==id)); renderList('dues'); }
+        }
+        function startDictation() { if('webkitSpeechRecognition' in window){const r=new webkitSpeechRecognition();r.lang='hi-IN';r.start();r.onresult=e=>document.getElementById('iName').value=e.results[0][0].transcript;}else alert("Use Chrome"); }
+        async function shareBill() { generateBillImage(); setTimeout(shareImageToDrive, 500); }
         
+        // --- SCANNER ---
         let scanner;
-        function startScanner(mode) {
-            document.getElementById('scannerModal').style.display='flex';
-            scanner = new Html5Qrcode("reader");
-            scanner.start({facingMode:"environment"},{fps:10, qrbox:200}, (c)=>{ 
-                closeScanner(); 
-                const db = getProds();
-                if(mode==='pos' && db[c]) { document.getElementById('iName').value=db[c].name; document.getElementById('iPrice').value=db[c].price; }
-                else if(mode==='product_add') { const n=prompt("Name:"); const p=prompt("Price:"); if(n&&p) { db[c]={name:n,price:p}; localStorage.setItem('kamdeo_products',JSON.stringify(db)); renderProductList(); } }
-                else { alert("Product Not Found"); }
-            });
-        }
-        function closeScanner() { if(scanner) scanner.stop(); document.getElementById('scannerModal').style.display='none'; }
-        
-        function renderProductList() {
-             const list = document.getElementById('productList'); list.innerHTML = '';
-             const db = getProds(); const q = document.getElementById('prodSearch').value.toLowerCase();
-             Object.keys(db).forEach(k => { if(db[k].name.toLowerCase().includes(q)) list.innerHTML+=`<div class="data-card"><b>${db[k].name}</b> ₹${db[k].price}</div>`; });
-        }
+        function startScanner(m) { document.getElementById('scannerModal').style.display='flex'; scanner=new Html5Qrcode("reader"); scanner.start({facingMode:"environment"},{fps:10,qrbox:200},(c)=>{closeScanner(); 
+            const db=getProds(); 
+            if(m==='pos' && db[c]) { document.getElementById('iName').value=db[c].name; document.getElementById('iPrice').value=db[c].price; }
+            else if(m==='product_add') { const n=prompt("Name:"); const p=prompt("Price:"); if(n&&p){db[c]={name:n,price:p};localStorage.setItem('kamdeo_products',JSON.stringify(db));renderProductList();} }
+            else { alert("Product Not Found"); }
+        });}
+        function closeScanner() { if(scanner)scanner.stop(); document.getElementById('scannerModal').style.display='none'; }
+        function renderProductList() { const l=document.getElementById('productList'); l.innerHTML=''; const db=getProds(); const q=document.getElementById('prodSearch').value.toLowerCase(); Object.keys(db).forEach(k=>{ if(db[k].name.toLowerCase().includes(q)) l.innerHTML+=`<div class="data-card"><b>${db[k].name}</b> ₹${db[k].price}</div>`; }); }
     </script>
 </body>
 </html>
