@@ -2,7 +2,8 @@
 <html lang="hi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="mobile-web-app-capable" content="yes">
     <title>Kamdeo POS Final</title>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -11,79 +12,44 @@
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 
     <style>
-        /* --- CORE STYLES --- */
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { 
-            margin: 0; padding: 0; 
-            background-color: #2c3e50; 
-            font-family: 'Segoe UI', sans-serif; 
-            height: 100vh; 
-            display: flex; flex-direction: column; 
-            overflow: hidden; 
-        }
+        body { margin: 0; padding: 0; background-color: #2c3e50; font-family: 'Segoe UI', sans-serif; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
 
-        /* 1. HEADER (Highest Priority - Always Visible) */
-        .app-header { 
-            position: fixed; 
-            top: 0; left: 0; width: 100%; height: 50px; 
-            background: #1a252f; color: white; 
-            padding: 0 15px; 
-            display: flex; justify-content: space-between; align-items: center; 
-            z-index: 6000; /* Sabse Upar */
-            box-shadow: 0 2px 5px rgba(0,0,0,0.3); 
-        }
+        /* 1. HEADER */
+        .app-header { flex: 0 0 50px; background: #1a252f; color: white; padding: 0 15px; display: flex; justify-content: space-between; align-items: center; z-index: 2000; box-shadow: 0 2px 5px rgba(0,0,0,0.3); }
 
         /* 2. MAIN CONTAINER */
-        .main-container {
-            margin-top: 50px; /* Space for Header */
-            margin-bottom: 70px; /* Space for Footer */
-            flex: 1; 
-            position: relative;
-            overflow: hidden; 
-            display: flex;
-            flex-direction: column;
-        }
-
+        .main-container { flex: 1; position: relative; overflow: hidden; display: flex; flex-direction: column; margin-top: 50px; margin-bottom: 70px; }
         .view-section { display: none; flex-direction: column; height: 100%; width: 100%; }
         .active-view { display: flex; }
 
-        /* INPUT DOCK */
-        .input-dock { 
-            flex: 0 0 auto; background: #34495e; padding: 10px; z-index: 10; 
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2); 
-        }
-        .input-row { display: flex; gap: 5px; margin-bottom: 5px; }
+        /* INPUT DOCK & SUGGESTIONS */
+        .input-dock { flex: 0 0 auto; background: #34495e; padding: 10px; z-index: 10; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        .input-row { display: flex; gap: 5px; margin-bottom: 5px; position: relative; }
         input, select { padding: 10px; border: none; border-radius: 5px; font-weight: bold; outline: none; font-size: 14px; width: 100%; }
         
         .btn { border: none; border-radius: 5px; cursor: pointer; color: white; display: flex; align-items: center; justify-content: center; }
-        .btn-scan { background: #8e44ad; width: 80px; font-size: 24px; } 
+        .btn-mic { background: #e67e22; width: 50px; font-size: 18px; }
+        .btn-scan { background: #8e44ad; width: 65px; font-size: 22px; }
         .btn-add { background: #27ae60; flex: 1; font-weight: bold; font-size: 16px; }
 
-        /* SCROLL AREA */
-        .scroll-area { 
-            flex: 1; overflow-y: auto; background: #555; padding: 15px; 
-            padding-bottom: 20px; 
-        }
-        
-        .paper-bill { 
-            width: 100%; max-width: 350px; background: #fff; min-height: 300px; 
-            padding: 10px; color: black; font-family: 'Courier New', monospace; font-weight: bold; font-size: 12px; 
-            position: relative; box-shadow: 0 0 15px black; margin-bottom: 20px;
-        }
+        .suggest-box { position: absolute; top: 100%; left: 0; width: 100%; background: white; color: black; box-shadow: 0 4px 10px rgba(0,0,0,0.5); max-height: 180px; overflow-y: auto; z-index: 1000; border-radius: 0 0 5px 5px; display: none; }
+        .suggest-item { padding: 12px; border-bottom: 1px solid #ddd; font-weight: bold; cursor: pointer; display: flex; justify-content: space-between; }
+        .suggest-item:active { background: #eee; }
+
+        /* SCROLL AREA & PAPER BILL */
+        .scroll-area { flex: 1; overflow-y: auto; background: #555; padding: 15px; -webkit-overflow-scrolling: touch; padding-bottom: 20px; }
+        .paper-wrapper { display: flex; justify-content: center; padding-bottom: 20px; }
+        .paper-bill { width: 100%; max-width: 350px; background: #fff; min-height: 300px; padding: 10px; color: black; font-family: 'Courier New', monospace; font-weight: bold; font-size: 12px; position: relative; box-shadow: 0 0 15px black; margin-bottom: 20px; }
         .r-table { width: 100%; border-collapse: collapse; margin-top: 5px; }
         .r-table th { border-bottom: 2px solid #000; text-align: left; font-size: 11px; }
         .r-table td { padding: 4px 0; border-bottom: 1px dotted #aaa; }
+        
+        [contenteditable="true"] { outline: none; }
+        [contenteditable="true"]:focus { background-color: #fdfd96; }
 
-        /* 3. FOOTER (Balanced Position) */
-        .action-bar { 
-            position: fixed; 
-            bottom: 0; left: 0; width: 100%; height: 70px; /* Fixed Height */
-            background: #fff; 
-            display: flex; justify-content: space-around; align-items: center; 
-            z-index: 5000; /* Below Header but above Content */
-            box-shadow: 0 -2px 10px rgba(0,0,0,0.3); border-top: 1px solid #ccc;
-            padding-bottom: 5px; /* Slight adjustment */
-        }
+        /* 3. FOOTER */
+        .action-bar { position: fixed; bottom: 0; left: 0; width: 100%; height: 70px; background: #fff; display: flex; justify-content: space-around; align-items: center; z-index: 5000; box-shadow: 0 -2px 10px rgba(0,0,0,0.3); border-top: 1px solid #ccc; padding-bottom: 5px; }
         .action-btn { background: none; border: none; display: flex; flex-direction: column; align-items: center; cursor: pointer; }
         .action-btn i { font-size: 22px; padding: 8px; border-radius: 8px; color: white; margin-bottom: 2px; }
         .action-btn span { color: #333; font-size: 10px; font-weight: bold; }
@@ -95,46 +61,47 @@
         .data-card { background: white; padding: 10px; margin-bottom: 10px; border-radius: 5px; display: flex; justify-content: space-between; align-items: center; border-left: 5px solid #27ae60; }
         .card-due { border-left: 5px solid #c0392b; }
         .card-btn { padding: 5px 8px; border-radius: 4px; border: none; color: white; margin-left: 5px; cursor: pointer; }
-        .btn-view { background: #2980b9; } .btn-del { background: #c0392b; } .btn-wa { background: #25D366; } .btn-edit { background: #f39c12; }
+        .btn-view { background: #2980b9; } .btn-del { background: #c0392b; } .btn-wa { background: #25D366; } .btn-edit { background: #f39c12; } .btn-play { background: #8e44ad; }
 
-        /* SIDEBAR (Starts below Header) */
+        /* ADVANCE NOTEPAD */
+        .rich-toolbar { display:flex; gap:10px; padding:10px; background:#ecf0f1; border-bottom:1px solid #ccc; overflow-x:auto; flex-shrink:0; white-space: nowrap; }
+        .rich-toolbar button { background:white; border:1px solid #bdc3c7; border-radius:4px; padding:8px 15px; font-size:16px; color:#2c3e50; cursor:pointer; flex-shrink:0; }
+        #noteEditor { flex:1; padding:15px; overflow-y:auto; outline:none; font-size:16px; line-height:1.5; font-family: sans-serif; background:#fff; color:#000; }
+        #noteEditor[contenteditable]:empty:before { content: attr(data-placeholder); color: #aaa; font-style: italic; }
+        #noteEditor img { max-width: 100%; border-radius: 5px; margin: 10px 0; }
+
+        /* NOTEPAD TABS */
+        .tab-btn { flex: 1; padding: 12px; border: none; font-weight: bold; color: white; cursor: pointer; font-size: 14px; }
+        .tab-active { background: #34495e; }
+        .tab-inactive { background: #1a252f; }
+
+        /* SIDEBAR */
         .modal-overlay { display: none; position: fixed; top: 50px; left: 0; width: 100%; height: calc(100% - 50px); background: rgba(0,0,0,0.5); z-index: 5100; }
-        .sidebar { position: fixed; top: 50px; left: -280px; width: 280px; height: calc(100% - 50px); background: #2c3e50; transition: 0.3s; z-index: 5200; padding-top: 10px; box-shadow: 2px 0 5px rgba(0,0,0,0.5); }
-        .sidebar a { display: block; padding: 15px; color: white; text-decoration: none; border-bottom: 1px solid #34495e; font-size: 15px; display: flex; align-items: center; gap: 10px; }
+        .sidebar { position: fixed; top: 50px; left: -300px; width: 300px; height: calc(100% - 50px); background: #2c3e50; transition: 0.3s; z-index: 5200; padding-top: 10px; box-shadow: 2px 0 5px rgba(0,0,0,0.5); overflow-y:auto; }
+        .sidebar a { display: flex; align-items: center; padding: 18px 20px; color: white; text-decoration: none; border-bottom: 1px solid #34495e; font-size: 18px; font-weight: bold; cursor: pointer; }
+        .sidebar a i { font-size: 24px; margin-right: 15px; width: 30px; text-align: center; color: #3498db; }
         .sidebar.active { left: 0; }
 
-        /* PREVIEW MODAL (Starts below Header) */
-        #imgPreviewModal { 
-            display: none; 
-            position: fixed; 
-            top: 50px; /* Leave space for Header */
-            left: 0; width: 100%; 
-            height: calc(100% - 50px); /* Full height minus header */
-            background: rgba(0,0,0,0.95); 
-            z-index: 4500; /* Below Header */
-            flex-direction: column; align-items: center; justify-content: center; 
-        }
+        /* MODALS */
+        #imgPreviewModal { display: none; position: fixed; top: 50px; left: 0; width: 100%; height: calc(100% - 50px); background: rgba(0,0,0,0.95); z-index: 4500; flex-direction: column; align-items: center; justify-content: center; }
         #imgContainer { max-height: 70vh; overflow-y: auto; padding: 10px; text-align: center; width: 100%; }
         #imgContainer img { border: 2px solid white; max-width: 90%; }
-        
         #scannerModal { display:none; position:fixed; top:50px; left:0; width:100%; height:calc(100% - 50px); background:black; z-index:6000; flex-direction:column; align-items:center; justify-content:center; }
+        
+        #voiceModal { display:none; position:fixed; top:50px; left:0; width:100%; height:calc(100% - 50px); background:rgba(0,0,0,0.8); z-index:6000; flex-direction:column; align-items:center; justify-content:center; }
+        .voice-box { background:white; padding:20px; border-radius:10px; text-align:center; width:80%; max-width:300px; }
 
-        /* REFRESH BTN */
-        .refresh-btn { color: white; font-size: 18px; margin-left: 15px; cursor: pointer; }
+        /* REFRESH BTN - MARGIN INCREASED TO 35px SO IT'S FAR AWAY FROM MENU */
+        .refresh-btn { color: white; font-size: 20px; margin-left: 35px; cursor: pointer; padding: 5px; }
 
-        @media print {
-            .app-header, .input-dock, .action-bar, .sidebar, .search-box, .card-btn, #imgPreviewModal, .refresh-btn { display: none !important; }
-            body, .main-container, .view-section, .scroll-area { height: auto; overflow: visible; display: block; margin: 0; padding: 0; }
-            #view-pos { display: block; }
-            .paper-bill { box-shadow: none; margin: 0; width: 100%; max-width: 58mm; border: none; padding: 0; }
-        }
+        @media print { .app-header, .input-dock, .action-bar, .sidebar, .search-box, .card-btn, #imgPreviewModal, .refresh-btn { display: none !important; } body, .main-container, .view-section, .scroll-area { height: auto; overflow: visible; display: block; margin: 0; padding: 0; } #view-pos { display: block; } .paper-bill { box-shadow: none; margin: 0; width: 100%; max-width: 58mm; border: none; padding: 0; } }
     </style>
 </head>
 <body>
 
     <div class="app-header">
         <div style="display:flex; align-items:center;">
-            <div onclick="toggleMenu()"><i class="fas fa-bars" style="font-size:22px;"></i></div>
+            <div onclick="toggleMenu()" style="padding: 5px;"><i class="fas fa-bars" style="font-size:24px;"></i></div>
             <div onclick="location.reload()" class="refresh-btn"><i class="fas fa-sync-alt"></i></div>
         </div>
         <div style="font-weight:bold; font-size:18px;">KAMDEO POS</div>
@@ -146,91 +113,84 @@
         <div id="view-pos" class="view-section active-view">
             <div class="input-dock">
                 <div class="input-row">
-                    <input type="text" id="iName" placeholder="Item Name (बोलें/लिखें)">
+                    <input type="text" id="iName" placeholder="Item Name (बोलें/लिखें)" onkeyup="suggestProducts()" autocomplete="off">
+                    <button class="btn btn-mic" onclick="startDictation('iName')"><i class="fas fa-microphone"></i></button>
                     <button class="btn btn-scan" onclick="startScanner('pos')"><i class="fas fa-barcode"></i></button>
+                    <div id="suggestBox" class="suggest-box"></div>
                 </div>
                 <div class="input-row">
                     <input type="number" id="iPrice" placeholder="Rate">
                     <input type="number" id="iQty" placeholder="Qty" value="1">
                     <button class="btn btn-add" onclick="addItem()">ADD</button>
                 </div>
-                <div class="input-row">
-                    <select id="payMode" style="background:#fff; color:#000;">
-                        <option value="CASH">💵 CASH</option>
-                        <option value="ONLINE">📱 ONLINE (UPI)</option>
-                    </select>
-                </div>
+                <div class="input-row"><select id="payMode" style="background:#fff; color:#000;"><option value="CASH">💵 CASH</option><option value="ONLINE">📱 ONLINE (UPI)</option></select></div>
             </div>
 
             <div class="scroll-area">
                 <div class="paper-wrapper">
                     <div class="paper-bill" id="billPaper">
                         <div id="dueMark" style="display:none; position:absolute; top:40%; left:50%; transform:translate(-50%,-50%) rotate(-30deg); border:4px solid red; color:red; font-size:60px; font-weight:900; opacity:0.3; padding:10px;">DUE</div>
-
                         <div style="text-align:center; border-bottom:2px dashed #000; padding-bottom:5px; margin-bottom:10px;">
-                            <div style="font-size:20px; font-weight:900; color:#c0392b;">KAMDEO KIRANA STORE</div>
-                            <div>Itkhori, Dhankheri, 825408 JH</div>
-                            <div>Mo: 96615 15728</div>
-                            <div style="font-weight:bold; border:1px solid #000; display:inline-block; padding:2px 5px; margin-top:3px;">Owner: KAMDEO PRAJAPATI</div>
+                            <div style="font-size:20px; font-weight:900; color:#c0392b;">KAMDEO KIRANA STORE</div><div>Itkhori, Dhankheri, 825408 JH</div><div>Mo: 96615 15728</div><div style="font-weight:bold; border:1px solid #000; display:inline-block; padding:2px 5px; margin-top:3px;">Owner: KAMDEO PRAJAPATI</div>
                         </div>
-
-                        <div style="display:flex; justify-content:space-between; font-size:11px;">
-                            <span id="liveDate"></span>
-                            <span id="liveTime"></span>
-                        </div>
-                        
-                        <div style="margin: 5px 0; border-bottom:1px solid #000; padding-bottom:5px;">
-                            <div style="display:flex; align-items:center;">
-                                <span>Name: </span>
-                                <input type="text" id="cName" placeholder="Customer Name" style="border:none; border-bottom:1px dotted #000; width:60%; margin-left:5px;">
-                            </div>
-                        </div>
-
-                        <table class="r-table" id="billTable">
-                            <thead><tr><th style="width:45%">ITEM</th><th style="width:20%">RATE</th><th style="width:10%">Q</th><th style="width:25%; text-align:right;">AMT</th><th></th></tr></thead>
-                            <tbody></tbody>
-                        </table>
-
+                        <div style="display:flex; justify-content:space-between; font-size:11px;"><span id="liveDate"></span><span id="liveTime"></span></div>
+                        <div style="margin: 5px 0; border-bottom:1px solid #000; padding-bottom:5px;"><div style="display:flex; align-items:center;"><span>Name: </span><input type="text" id="cName" placeholder="Customer Name" style="border:none; border-bottom:1px dotted #000; width:60%; margin-left:5px;"></div></div>
+                        <table class="r-table" id="billTable"><thead><tr><th style="width:45%">ITEM</th><th style="width:20%">RATE</th><th style="width:10%">Q</th><th style="width:25%; text-align:right;">AMT</th><th></th></tr></thead><tbody></tbody></table>
                         <div style="margin-top:10px; border-top:2px solid #000; padding-top:5px;">
                             <div style="display:flex; justify-content:space-between;"><span>Total:</span><span id="subTotal">0.00</span></div>
                             <div style="display:flex; justify-content:space-between;"><span>Disc:</span><span>- <input type="number" id="discountVal" style="width:40px; text-align:right; border-bottom:1px solid #000;" placeholder="0" onkeyup="updateTotal()"></span></div>
                             <div style="font-size:16px; font-weight:900; border-top:1px solid #000; margin-top:5px; padding-top:5px; display:flex; justify-content:space-between;"><span>GRAND TOTAL:</span><span>₹ <span id="grandTotal">0.00</span></span></div>
                             <div style="text-align:right; font-size:11px; margin-top:2px;">Paid via: <span id="billPayMode">CASH</span></div>
                         </div>
-                        
                         <div style="margin-top:20px; width:100px; height:100px; border:3px solid #d63031; border-radius:50%; display:flex; flex-direction:column; justify-content:center; align-items:center; color:#d63031; font-weight:900; font-size:10px; transform:rotate(-15deg); margin-left:auto; margin-right:auto; background:rgba(255,255,255,0.8);">
-                            <div style="border:1px solid #d63031; width:90%; height:90%; border-radius:50%; display:flex; flex-direction:column; justify-content:center; align-items:center;">
-                                <div>KAMDEO</div>
-                                <div style="font-size:14px; border-top:1px solid red; border-bottom:1px solid red;">ACS</div>
-                                <div>STORE</div>
-                            </div>
+                            <div style="border:1px solid #d63031; width:90%; height:90%; border-radius:50%; display:flex; flex-direction:column; justify-content:center; align-items:center;"><div>KAMDEO</div><div style="font-size:14px; border-top:1px solid red; border-bottom:1px solid red;">ACS</div><div>STORE</div></div>
                         </div>
-
-                        <div style="text-align:center; margin-top:10px; font-size:10px; color:#555;">
-                            <div>POWERED BY ACS</div>
-                        </div>
+                        <div style="text-align:center; margin-top:10px; font-size:10px; color:#555;"><div>POWERED BY ACS</div></div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div id="view-dues" class="view-section">
-            <div class="search-box"><input type="text" id="dueSearch" placeholder="🔍 Search Due..." onkeyup="renderList('dues')"></div>
-            <div class="scroll-area"><div class="list-wrapper" id="duesListContainer"></div></div>
-        </div>
-        <div id="view-history" class="view-section">
-            <div class="search-box"><input type="text" id="histSearch" placeholder="🔍 Search History..." onkeyup="renderList('history')"></div>
-            <div class="scroll-area"><div class="list-wrapper" id="historyListContainer"></div></div>
-        </div>
-        <div id="view-products" class="view-section">
-            <div class="search-box">
-                <div class="input-row">
-                    <input type="text" id="prodSearch" placeholder="Search Product..." onkeyup="renderProductList()">
-                    <button class="btn btn-scan" onclick="startScanner('product_add')"><i class="fas fa-plus"></i></button>
+        <div id="view-rough" class="view-section" style="background:#ecf0f1;">
+            <div style="background:#34495e; color:white; padding:15px; font-weight:bold; font-size:18px; text-align:center;">🧾 Rough Bill Maker (AI)</div>
+            <div style="display:flex; flex-direction:column; flex:1; padding:15px; overflow-y:auto;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                    <span style="font-weight:bold; color:#2c3e50; font-size:16px;">Type or Speak items</span>
+                    <button class="btn btn-mic" style="width:auto; padding:8px 15px;" onclick="startRoughDictation()"><i class="fas fa-microphone"></i> Bol Kar Likhen</button>
                 </div>
+                <textarea id="roughBillText" style="flex:1; width:100%; border:1px solid #ccc; border-radius:5px; padding:15px; font-size:18px; font-family:sans-serif; resize:none;" placeholder="रफ़ बिल यहाँ लिखें या बोलें...&#10;जैसे:&#10;250 का साबुन&#10;2 किलो चीनी&#10;50 वाला 2 तेल"></textarea>
+                <button style="background:#8e44ad; color:white; border:none; padding:15px; font-size:18px; font-weight:bold; border-radius:5px; margin-top:15px; cursor:pointer; box-shadow:0 4px 6px rgba(0,0,0,0.2);" onclick="analyzeRoughBill()"><i class="fas fa-magic"></i> ✨ Create Smart Bill</button>
             </div>
-            <div class="scroll-area"><div class="list-wrapper" id="productList"></div></div>
         </div>
+
+        <div id="view-notepad" class="view-section" style="background:#fff;">
+            <div id="notepad-list-view" style="display:flex; flex-direction:column; height:100%; background:#ecf0f1;">
+                <div class="search-box" style="display:flex; justify-content:space-between; align-items:center;">
+                    <span style="color:white; font-weight:bold; font-size:18px;">📝 All Notes</span>
+                    <button class="btn" style="background:#27ae60; padding:10px 15px; font-size:16px;" onclick="createNewNote()">+ New Note</button>
+                </div>
+                <div class="scroll-area" id="notesListContainer"></div>
+            </div>
+            <div id="notepad-editor-view" style="display:none; flex-direction:column; height:100%;">
+                <div style="background:#34495e; padding:10px; display:flex; justify-content:space-between; align-items:center;">
+                    <button class="btn" style="background:#7f8c8d; padding:10px;" onclick="closeNoteEditor()"><i class="fas fa-arrow-left"></i></button>
+                    <input type="text" id="noteTitle" placeholder="Title (e.g. List)" style="flex:1; margin:0 10px; padding:10px; font-size:16px;">
+                    <button class="btn" style="background:#27ae60; padding:10px 20px; font-size:16px;" onclick="saveNote()">Save</button>
+                </div>
+                <div class="rich-toolbar">
+                    <button onclick="formatText('bold')" title="Bold"><i class="fas fa-bold"></i></button>
+                    <button onclick="formatText('italic')" title="Italic"><i class="fas fa-italic"></i></button>
+                    <button onclick="formatText('underline')" title="Underline"><i class="fas fa-underline"></i></button>
+                    <button onclick="document.getElementById('noteImageInput').click()" title="Attach Photo"><i class="fas fa-image"></i></button>
+                    <input type="file" id="noteImageInput" style="display:none" accept="image/*" onchange="insertNoteImage(this)">
+                </div>
+                <div id="noteEditor" contenteditable="true" data-placeholder="यहाँ टाइप करें..."></div>
+            </div>
+        </div>
+
+        <div id="view-dues" class="view-section"><div class="search-box"><input type="text" id="dueSearch" placeholder="🔍 Search Due..." onkeyup="renderList('dues')"></div><div class="scroll-area"><div class="list-wrapper" id="duesListContainer"></div></div></div>
+        <div id="view-history" class="view-section"><div class="search-box"><input type="text" id="histSearch" placeholder="🔍 Search History..." onkeyup="renderList('history')"></div><div class="scroll-area"><div class="list-wrapper" id="historyListContainer"></div></div></div>
+        <div id="view-products" class="view-section"><div class="search-box"><div class="input-row"><input type="text" id="prodSearch" placeholder="Search Product..." onkeyup="renderProductList()"><button class="btn btn-scan" onclick="startScanner('product_add')"><i class="fas fa-plus"></i></button></div></div><div class="scroll-area"><div class="list-wrapper" id="productList"></div></div></div>
 
     </div>
 
@@ -238,124 +198,193 @@
         <button class="action-btn btn-gen" onclick="handleBillAction()"><i class="fas fa-image"></i><span>BILL</span></button>
         <button class="action-btn btn-prt" onclick="handlePrintAction()"><i class="fas fa-print"></i><span>PRINT</span></button>
         <button class="action-btn btn-shr" onclick="handleShareAction()"><i class="fas fa-share-alt"></i><span>SHARE</span></button>
-        <button class="action-btn btn-due" onclick="handleDueAction()"><i class="fas fa-user-clock"></i><span>ADD DUE</span></button>
+        <button class="action-btn btn-due" onclick="initiateDueAction()"><i class="fas fa-user-clock"></i><span>ADD DUE</span></button>
     </div>
 
     <div class="modal-overlay" id="menuOverlay" onclick="toggleMenu()"></div>
     <div class="sidebar" id="sidebar">
-        <a onclick="switchView('view-pos')">🧾 Billing (POS)</a>
-        <a onclick="switchView('view-dues')">📕 <b>Due List (Udhaar)</b></a>
-        <a onclick="switchView('view-products')">📦 Product Listing</a>
-        <a onclick="switchView('view-history')">📜 Bill History</a>
-        <hr style="border-color:#444;">
-        <a href="https://acsadarsh.github.io/Acs/" target="_blank">🔗 Connect to ACS</a>
-        <a href="https://wa.me/918252900810?text=Help" target="_blank">🆘 Help Center</a>
-        <a onclick="backupData()">☁️ Backup Data</a>
+        <a onclick="switchView('view-pos')"><i class="fas fa-receipt"></i> Billing (POS)</a>
+        <a onclick="switchView('view-rough')"><i class="fas fa-magic"></i> Rough Bill Maker</a>
+        <a onclick="switchView('view-dues')"><i class="fas fa-book-open"></i> Due List (Udhaar)</a>
+        <a onclick="switchView('view-products')"><i class="fas fa-boxes"></i> Product Listing</a>
+        <a onclick="switchView('view-notepad')"><i class="fas fa-sticky-note"></i> Notepad</a>
+        <a onclick="switchView('view-history')"><i class="fas fa-history"></i> Bill History</a>
+        <hr style="border-color:#444; margin:10px 0;">
+        <a href="https://acsadarsh.github.io/Acs/" target="_blank"><i class="fas fa-link"></i> Connect ACS</a>
+        <a href="https://wa.me/918252900810?text=Help" target="_blank"><i class="fab fa-whatsapp"></i> Help Center</a>
+        <a onclick="backupData()"><i class="fas fa-cloud-download-alt"></i> Backup Data</a>
     </div>
 
-    <div id="imgPreviewModal">
-        <div style="color:white; margin-bottom:10px; font-weight:bold;">Bill Generated</div>
-        <div id="imgContainer"></div>
-        <div style="margin-top:20px; display:flex; gap:10px;">
-            <button onclick="shareImageToDrive()" style="background:#2ecc71; color:white; border:none; padding:10px 20px; font-size:16px; border-radius:5px;"><i class="fas fa-share-alt"></i> Share</button>
-            <button onclick="document.getElementById('imgPreviewModal').style.display='none'" style="background:red; color:white; border:none; padding:10px 20px; font-size:16px; border-radius:5px;">Close</button>
-        </div>
-    </div>
-
+    <div id="imgPreviewModal"><div style="color:white; margin-bottom:10px; font-weight:bold;">Bill Generated</div><div id="imgContainer"></div><div style="margin-top:20px; display:flex; gap:10px;"><button onclick="shareImageToDrive()" style="background:#2ecc71; color:white; border:none; padding:10px 20px; font-size:16px; border-radius:5px;"><i class="fas fa-share-alt"></i> Share</button><button onclick="document.getElementById('imgPreviewModal').style.display='none'" style="background:red; color:white; border:none; padding:10px 20px; font-size:16px; border-radius:5px;">Close</button></div></div>
     <div id="scannerModal"><div id="reader" style="width:300px; height:300px; background:white;"></div><button onclick="closeScanner()" style="background:red; color:white; border:none; padding:10px; margin-top:20px;">CLOSE</button></div>
+    <div id="voiceModal"><div class="voice-box"><h3 style="color:black; margin-top:0;">🎤 Voice Note</h3><p id="voiceStatus" style="color:#c0392b; font-weight:bold;">क्या आप वॉयस मैसेज जोड़ना चाहते हैं?</p><div style="display:flex; justify-content:center; gap:10px; margin-bottom:15px;"><button id="btnStartVoice" onclick="startVoiceRecord()" style="background:#27ae60; color:white; padding:10px 15px; border:none; border-radius:5px; font-weight:bold;"><i class="fas fa-play"></i> Start Record</button><button id="btnStopVoice" onclick="stopVoiceRecord()" style="background:#c0392b; color:white; padding:10px 15px; border:none; border-radius:5px; font-weight:bold; display:none;"><i class="fas fa-stop"></i> Stop & Save</button></div><button onclick="skipVoiceRecord()" style="background:#555; color:white; padding:10px; border:none; border-radius:5px; width:100%; font-weight:bold;">Skip (Without Voice)</button></div></div>
 
     <script>
         const audioCtx=new(window.AudioContext||window.webkitAudioContext)();
         function playSound(t){if(audioCtx.state==='suspended')audioCtx.resume();const o=audioCtx.createOscillator();const g=audioCtx.createGain();o.connect(g);g.connect(audioCtx.destination);if(t==='scan'){o.type='sine';o.frequency.setValueAtTime(1200,audioCtx.currentTime);g.gain.setValueAtTime(0.1,audioCtx.currentTime);o.start();o.stop(audioCtx.currentTime+0.1);}else{o.type='triangle';o.frequency.setValueAtTime(600,audioCtx.currentTime);o.frequency.linearRampToValueAtTime(800,audioCtx.currentTime+0.1);g.gain.setValueAtTime(0.1,audioCtx.currentTime);o.start();o.stop(audioCtx.currentTime+0.3);}}
-        
         function updateTime(){const n=new Date();document.getElementById('liveDate').innerText=n.toLocaleDateString('en-IN');document.getElementById('liveTime').innerText=n.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});}
         setInterval(updateTime,1000); updateTime();
         
         function toggleMenu(){const s=document.getElementById('sidebar');const o=document.getElementById('menuOverlay');if(s.classList.contains('active')){s.classList.remove('active');o.style.display='none';}else{s.classList.add('active');o.style.display='block';}}
-        function switchView(v){document.querySelectorAll('.view-section').forEach(e=>e.classList.remove('active-view'));document.getElementById(v).classList.add('active-view');toggleMenu();if(v==='view-dues')renderList('dues');if(v==='view-history')renderList('history');if(v==='view-products')renderProductList();}
+        function switchView(v){document.querySelectorAll('.view-section').forEach(e=>e.classList.remove('active-view'));document.getElementById(v).classList.add('active-view');toggleMenu();if(v==='view-dues')renderList('dues');if(v==='view-history')renderList('history');if(v==='view-products')renderProductList();if(v==='view-notepad')loadNotesList();}
         
         function getData(k){return JSON.parse(localStorage.getItem(k)||'[]');}
         function saveData(k,d){localStorage.setItem(k,JSON.stringify(d));}
         function getProds(){return JSON.parse(localStorage.getItem('kamdeo_products')||'{}');}
         
+        function suggestProducts() {
+            const val = document.getElementById('iName').value.toLowerCase(); const box = document.getElementById('suggestBox');
+            if (!val) { box.style.display = 'none'; return; }
+            const db = getProds(); let html = '';
+            Object.keys(db).forEach(k => { const p = db[k]; if (p.name.toLowerCase().includes(val) || k.includes(val)) { const safeName = p.name.replace(/'/g, "\\'"); html += `<div class="suggest-item" onclick="selectSuggest('${safeName}', '${p.price}')"><span>${p.name}</span><span>₹${p.price}</span></div>`; } });
+            if(html){ box.innerHTML = html; box.style.display = 'block'; } else { box.style.display = 'none'; }
+        }
+        function selectSuggest(name, price) { document.getElementById('iName').value = name; document.getElementById('iPrice').value = price; document.getElementById('suggestBox').style.display = 'none'; document.getElementById('iQty').focus(); }
+        document.addEventListener('click', function(e) { if(e.target.id !== 'iName' && document.getElementById('suggestBox')) document.getElementById('suggestBox').style.display = 'none'; });
+
+        function startDictation(targetId) {
+            if ('webkitSpeechRecognition' in window) {
+                const rec = new webkitSpeechRecognition(); rec.lang = 'hi-IN'; rec.start();
+                rec.onresult = e => { document.getElementById(targetId).value = e.results[0][0].transcript; if(targetId==='iName') suggestProducts(); }
+            } else alert("Mic not supported.");
+        }
+
+        // --- NOTEPAD ---
+        let currentNoteId = null;
+        function loadNotesList() {
+            const notes = JSON.parse(localStorage.getItem('kamdeo_notes') || '[]'); const container = document.getElementById('notesListContainer'); container.innerHTML = '';
+            notes.forEach(note => {
+                let plainText = note.content.replace(/<[^>]+>/g, ' '); 
+                container.innerHTML += `<div class="data-card" style="cursor:pointer;" onclick="openNote(${note.id})"><div style="flex:1;"><div style="font-weight:bold; font-size:16px; color:#2c3e50;">${note.title || 'Untitled'}</div><div style="font-size:11px; color:#7f8c8d; margin-bottom:5px;">${note.date}</div><div style="font-size:13px; color:#555; max-height:20px; overflow:hidden;">${plainText.substring(0,50)}...</div></div><button class="card-btn btn-del" onclick="event.stopPropagation(); deleteNote(${note.id})"><i class="fas fa-trash"></i></button></div>`;
+            });
+        }
+        function createNewNote() { currentNoteId = Date.now(); document.getElementById('noteTitle').value = ''; document.getElementById('noteEditor').innerHTML = ''; document.getElementById('notepad-list-view').style.display = 'none'; document.getElementById('notepad-editor-view').style.display = 'flex'; }
+        function openNote(id) { const notes = JSON.parse(localStorage.getItem('kamdeo_notes') || '[]'); const note = notes.find(n => n.id === id); if(note) { currentNoteId = note.id; document.getElementById('noteTitle').value = note.title; document.getElementById('noteEditor').innerHTML = note.content; document.getElementById('notepad-list-view').style.display = 'none'; document.getElementById('notepad-editor-view').style.display = 'flex'; } }
+        function closeNoteEditor() { document.getElementById('notepad-list-view').style.display = 'flex'; document.getElementById('notepad-editor-view').style.display = 'none'; loadNotesList(); }
+        function saveNote() {
+            const title = document.getElementById('noteTitle').value; const content = document.getElementById('noteEditor').innerHTML; let notes = JSON.parse(localStorage.getItem('kamdeo_notes') || '[]');
+            const index = notes.findIndex(n => n.id === currentNoteId);
+            if(index > -1) { notes[index].title = title; notes[index].content = content; notes[index].date = new Date().toLocaleString(); } else { notes.unshift({ id: currentNoteId, title, content, date: new Date().toLocaleString() }); }
+            localStorage.setItem('kamdeo_notes', JSON.stringify(notes)); playSound('bill'); alert("Note Saved!"); closeNoteEditor();
+        }
+        function deleteNote(id) { if(confirm("Delete this note?")) { let notes = JSON.parse(localStorage.getItem('kamdeo_notes') || '[]'); notes = notes.filter(n => n.id !== id); localStorage.setItem('kamdeo_notes', JSON.stringify(notes)); loadNotesList(); } }
+        function formatText(cmd, val=null) { document.execCommand(cmd, false, val); document.getElementById('noteEditor').focus(); }
+        function insertNoteImage(input) { if (input.files && input.files[0]) { const reader = new FileReader(); reader.onload = function(e) { formatText('insertHTML', `<img src="${e.target.result}"><br>`); }; reader.readAsDataURL(input.files[0]); } }
+
+        // --- AI ROUGH BILL PARSER ---
+        function startRoughDictation() {
+            if ('webkitSpeechRecognition' in window) {
+                const rec = new webkitSpeechRecognition(); rec.lang = 'hi-IN'; rec.continuous = true; rec.start();
+                rec.onresult = e => { 
+                    let current = document.getElementById('roughBillText').value;
+                    let newText = e.results[e.results.length-1][0].transcript;
+                    document.getElementById('roughBillText').value = current + (current ? "\n" : "") + newText; 
+                }
+            } else alert("Mic not supported.");
+        }
+
+        function analyzeRoughBill() {
+            const text = document.getElementById('roughBillText').value;
+            if(!text.trim()) { alert("Please write/dictate something!"); return; }
+            document.getElementById('billTable').querySelector('tbody').innerHTML = ""; 
+            const lines = text.split(/[\n,और]+/); const db = getProds(); let itemsAdded = 0;
+
+            lines.forEach(line => {
+                let str = line.trim().toLowerCase(); if(!str) return;
+                str = str.replace(/\bek\b/g, '1').replace(/\bdo\b/g, '2').replace(/\bteen\b/g, '3').replace(/\bchar\b/g, '4').replace(/\bpaanch\b/g, '5').replace(/\bpanch\b/g, '5');
+                let qty = 1; let price = 0; let name = str;
+
+                let priceMatch = name.match(/(\d+)\s*(wala|vali|wale|rs\.?|rupee|rupaye|ka|ke|ki)(?:\s+(ka|ke|ki))?\b/);
+                if(priceMatch) { price = parseFloat(priceMatch[1]); name = name.replace(priceMatch[0], '').trim(); }
+
+                let qtyMatch = name.match(/^([\d\.]+)\s*(kilo|kg|pc|piece|pack|packet|lit|l|gram|gm|dabba|box)?\b\s*/);
+                if(qtyMatch) { qty = parseFloat(qtyMatch[1]); name = name.replace(qtyMatch[0], '').trim(); }
+
+                let matchedPrice = 0; let foundInDb = false;
+                for(let key in db) { let dbName = db[key].name.toLowerCase(); if(dbName.includes(name) || name.includes(dbName)) { matchedPrice = parseFloat(db[key].price); name = db[key].name; foundInDb = true; break; } }
+                if(foundInDb && price === 0) price = matchedPrice;
+                if(!foundInDb && price === 0) { let words = name.split(' '); let lastWord = words[words.length-1]; if(!isNaN(lastWord) && lastWord.trim() !== '') { price = parseFloat(lastWord); words.pop(); name = words.join(' ').trim(); } }
+
+                if(!name || name === "") name = "Item"; name = name.charAt(0).toUpperCase() + name.slice(1);
+                
+                const total = price * qty;
+                const row = document.getElementById('billTable').querySelector('tbody').insertRow();
+                row.innerHTML = `<td contenteditable="true" oninput="recalcRow(this)">${name}</td><td contenteditable="true" oninput="recalcRow(this)">${price}</td><td contenteditable="true" oninput="recalcRow(this)">${qty}</td><td class="amt" data-val="${total}" style="text-align:right;">${total.toFixed(2)}</td><td style="text-align:center;"><i class="fas fa-times" style="color:red; cursor:pointer;" onclick="this.closest('tr').remove();updateTotal();"></i></td>`;
+                itemsAdded++;
+            });
+            if(itemsAdded > 0) { updateTotal(); playSound('bill'); alert("✅ Smart Bill Created!"); switchView('view-pos'); } else { alert("Couldn't format."); }
+        }
+
+        // --- POS CORE & EDITABLE TABLE ---
         document.getElementById('payMode').addEventListener('change',function(){document.getElementById('billPayMode').innerText=this.value;});
         
         function addItem(){
             const n=document.getElementById('iName').value; const p=parseFloat(document.getElementById('iPrice').value); const q=parseFloat(document.getElementById('iQty').value);
             if(!n||isNaN(p)||isNaN(q))return;
             const t=p*q; const row=document.getElementById('billTable').querySelector('tbody').insertRow();
-            row.innerHTML=`<td>${n}</td><td>${p}</td><td>${q}</td><td class="amt" data-val="${t}" style="text-align:right;">${t.toFixed(2)}</td><td style="text-align:center;"><i class="fas fa-times" style="color:red;" onclick="this.closest('tr').remove();updateTotal();"></i></td>`;
+            row.innerHTML=`<td contenteditable="true" oninput="recalcRow(this)">${n}</td><td contenteditable="true" oninput="recalcRow(this)">${p}</td><td contenteditable="true" oninput="recalcRow(this)">${q}</td><td class="amt" data-val="${t}" style="text-align:right;">${t.toFixed(2)}</td><td style="text-align:center;"><i class="fas fa-times" style="color:red; cursor:pointer;" onclick="this.closest('tr').remove();updateTotal();"></i></td>`;
             document.getElementById('iName').value=''; document.getElementById('iPrice').value=''; document.getElementById('iQty').value='1'; updateTotal();
         }
-        function updateTotal(){
-            let sum=0; document.querySelectorAll('.amt').forEach(t=>sum+=parseFloat(t.getAttribute('data-val')));
-            document.getElementById('subTotal').innerText=sum.toFixed(2);
-            document.getElementById('grandTotal').innerText=(sum-(parseFloat(document.getElementById('discountVal').value)||0)).toFixed(2);
+
+        function recalcRow(cell) {
+            const row = cell.closest('tr');
+            const p = parseFloat(row.cells[1].innerText.replace(/[^0-9.]/g, '')) || 0;
+            const q = parseFloat(row.cells[2].innerText.replace(/[^0-9.]/g, '')) || 0;
+            const t = p * q;
+            row.cells[3].setAttribute('data-val', t);
+            row.cells[3].innerText = t.toFixed(2);
+            updateTotal();
         }
 
-        function resetPOS() {
-            document.getElementById('cName').value = ""; document.getElementById('iName').value = ""; document.getElementById('iPrice').value = ""; document.getElementById('iQty').value = "1"; document.getElementById('discountVal').value = "";
-            document.getElementById('billTable').querySelector('tbody').innerHTML = ""; document.getElementById('subTotal').innerText = "0.00"; document.getElementById('grandTotal').innerText = "0.00"; document.getElementById('dueMark').style.display = 'none';
-        }
+        function updateTotal(){ let sum=0; document.querySelectorAll('.amt').forEach(t=>sum+=parseFloat(t.getAttribute('data-val'))); document.getElementById('subTotal').innerText=sum.toFixed(2); document.getElementById('grandTotal').innerText=(sum-(parseFloat(document.getElementById('discountVal').value)||0)).toFixed(2); }
+        function resetPOS() { document.getElementById('cName').value=""; document.getElementById('iName').value=""; document.getElementById('iPrice').value=""; document.getElementById('iQty').value="1"; document.getElementById('discountVal').value=""; document.getElementById('billTable').querySelector('tbody').innerHTML=""; document.getElementById('subTotal').innerText="0.00"; document.getElementById('grandTotal').innerText="0.00"; document.getElementById('dueMark').style.display='none'; }
 
-        function saveRec(isDue) {
+        // --- VOICE DUE & SAVE SYSTEM ---
+        let mediaRecorder; let audioChunks = [];
+        function initiateDueAction() { if(document.querySelectorAll('#billTable tbody tr').length===0){alert("Bill Empty!");return;} if(!document.getElementById('cName').value){alert("Customer Name Required!");return;} document.getElementById('voiceModal').style.display = 'flex'; document.getElementById('voiceStatus').innerText = "क्या आप वॉयस मैसेज जोड़ना चाहते हैं?"; document.getElementById('btnStartVoice').style.display = 'block'; document.getElementById('btnStopVoice').style.display = 'none'; }
+        async function startVoiceRecord() { try { const stream = await navigator.mediaDevices.getUserMedia({ audio: true }); mediaRecorder = new MediaRecorder(stream); audioChunks = []; mediaRecorder.ondataavailable = e => { if(e.data.size > 0) audioChunks.push(e.data); }; mediaRecorder.onstop = () => { const blob = new Blob(audioChunks, { type: 'audio/webm' }); const reader = new FileReader(); reader.readAsDataURL(blob); reader.onloadend = () => { finalizeDue(reader.result); } }; mediaRecorder.start(); document.getElementById('voiceStatus').innerText = "Recording... 🔴"; document.getElementById('btnStartVoice').style.display = 'none'; document.getElementById('btnStopVoice').style.display = 'block'; } catch(e) { alert("Mic Access Denied!"); skipVoiceRecord(); } }
+        function stopVoiceRecord() { if(mediaRecorder && mediaRecorder.state === "recording") { mediaRecorder.stop(); mediaRecorder.stream.getTracks().forEach(t=>t.stop()); } }
+        function skipVoiceRecord() { if(mediaRecorder && mediaRecorder.state === "recording") { mediaRecorder.stop(); mediaRecorder.stream.getTracks().forEach(t=>t.stop()); } finalizeDue(null); }
+        function finalizeDue(audioBase64) { document.getElementById('voiceModal').style.display = 'none'; document.getElementById('dueMark').style.display='block'; saveRec(true, audioBase64); playSound('bill'); alert("Added to Due!"); setTimeout(resetPOS, 500); }
+
+        function saveRec(isDue, audioBase64 = null) {
             const c=document.getElementById('cName').value||"Unknown"; const t=document.getElementById('grandTotal').innerText; const d=document.getElementById('discountVal').value; const pm=document.getElementById('payMode').value;
             let items=[]; document.querySelectorAll('#billTable tbody tr').forEach(r=>{items.push({name:r.cells[0].innerText,price:r.cells[1].innerText,qty:r.cells[2].innerText,total:r.cells[3].innerText});});
-            if(items.length===0) return false;
-            const rec={id:Date.now(),date:new Date().toLocaleString(),customer:c,total:t,discount:d,payMode:pm,items:items,isDue:isDue};
-            const k=isDue?'kamdeo_dues':'kamdeo_history'; let data=getData(k); data.unshift(rec); saveData(k,data);
-            return true;
+            if(items.length===0) return false; const rec={id:Date.now(),date:new Date().toLocaleString(),customer:c,total:t,discount:d,payMode:pm,items:items,isDue:isDue, audio:audioBase64}; const k=isDue?'kamdeo_dues':'kamdeo_history'; let data=getData(k); data.unshift(rec); saveData(k,data); return true;
         }
 
         async function handleBillAction() { if(document.querySelectorAll('#billTable tbody tr').length===0){alert("Empty!");return;} playSound('bill'); await generateBillImage(); if(saveRec(false)) setTimeout(resetPOS, 1000); }
         function handlePrintAction() { if(document.querySelectorAll('#billTable tbody tr').length===0){alert("Empty!");return;} saveRec(false); window.print(); setTimeout(resetPOS, 1000); }
         async function handleShareAction() { if(document.querySelectorAll('#billTable tbody tr').length===0){alert("Empty!");return;} saveRec(false); await generateBillImage(); setTimeout(shareImageToDrive, 500); setTimeout(resetPOS, 2000); }
-        function handleDueAction() { if(document.querySelectorAll('#billTable tbody tr').length===0){alert("Empty!");return;} if(!document.getElementById('cName').value){alert("Name Required");return;} document.getElementById('dueMark').style.display='block'; saveRec(true); playSound('bill'); alert("Added to Due!"); setTimeout(resetPOS, 500); }
 
         async function generateBillImage() {
-            document.querySelectorAll('.fa-times').forEach(e=>e.style.display='none');
-            const el=document.getElementById('billPaper'); 
-            const c=await html2canvas(el,{scale:2,backgroundColor:"#ffffff"});
-            document.querySelectorAll('.fa-times').forEach(e=>e.style.display='inline');
-            window.currCanvas=c; const img=document.createElement('img'); img.src=c.toDataURL();
-            document.getElementById('imgContainer').innerHTML=''; document.getElementById('imgContainer').appendChild(img);
-            document.getElementById('imgPreviewModal').style.display='flex';
+            document.querySelectorAll('.fa-times').forEach(e=>e.style.display='none'); const el=document.getElementById('billPaper'); el.scrollIntoView(); const c=await html2canvas(el,{scale:2,backgroundColor:"#ffffff"}); document.querySelectorAll('.fa-times').forEach(e=>e.style.display='inline'); window.currCanvas=c; const img=document.createElement('img'); img.src=c.toDataURL(); document.getElementById('imgContainer').innerHTML=''; document.getElementById('imgContainer').appendChild(img); document.getElementById('imgPreviewModal').style.display='flex';
         }
-
         function shareImageToDrive(){ if(window.currCanvas) window.currCanvas.toBlob(async b=>{ const f=new File([b],"KamdeoBill.png",{type:"image/png"}); if(navigator.share){try{await navigator.share({files:[f],title:'Bill'});}catch(e){}}else{const a=document.createElement('a');a.href=window.currCanvas.toDataURL();a.download='KamdeoBill.png';a.click();} }); }
 
         function renderList(t){
             const cont=document.getElementById(t==='dues'?'duesListContainer':'historyListContainer'); const q=document.getElementById(t==='dues'?'dueSearch':'histSearch').value.toLowerCase(); const data=getData(t==='dues'?'kamdeo_dues':'kamdeo_history'); cont.innerHTML='';
-            data.forEach(b=>{ if(b.customer.toLowerCase().includes(q)){ const s=JSON.stringify(b).replace(/"/g,'&quot;'); cont.innerHTML+=`<div class="data-card ${t==='dues'?'card-due':''}"><div><b>${b.customer}</b><br><small>${b.date} | ₹${b.total}</small></div><div><button class="card-btn btn-view" onclick='viewBill(${s})'><i class="fas fa-eye"></i></button>${t==='dues'?`<button class="card-btn btn-wa" onclick="sendReminder('${b.customer}','${b.total}')"><i class="fab fa-whatsapp"></i></button>`:''}<button class="card-btn btn-del" onclick="delRec('${t}',${b.id})"><i class="fas fa-trash"></i></button>${t==='dues'?`<button class="card-btn" style="background:#2ecc71;" onclick="markPaid(${b.id})">Paid</button>`:''}</div></div>`; } });
+            data.forEach(b=>{ if(b.customer.toLowerCase().includes(q)){ const s=JSON.stringify(b).replace(/"/g,'&quot;'); let audioBtn = b.audio ? `<button class="card-btn btn-play" onclick="new Audio('${b.audio}').play()"><i class="fas fa-play"></i></button>` : ''; cont.innerHTML+=`<div class="data-card ${t==='dues'?'card-due':''}"><div><b>${b.customer}</b><br><small>${b.date} | ₹${b.total}</small></div><div style="display:flex; align-items:center;"><button class="card-btn btn-view" onclick='viewBill(${s})'><i class="fas fa-eye"></i></button>${audioBtn}${t==='dues'?`<button class="card-btn btn-wa" onclick="sendReminder('${b.customer}','${b.total}')"><i class="fab fa-whatsapp"></i></button>`:''}<button class="card-btn btn-del" onclick="delRec('${t}',${b.id})"><i class="fas fa-trash"></i></button>${t==='dues'?`<button class="card-btn" style="background:#2ecc71;" onclick="markPaid(${b.id})">Paid</button>`:''}</div></div>`; }});
         }
 
         async function viewBill(b){
             document.querySelectorAll('.view-section').forEach(e=>e.classList.remove('active-view')); document.getElementById('view-pos').classList.add('active-view');
             document.getElementById('cName').value=b.customer; document.getElementById('grandTotal').innerText=b.total; document.getElementById('discountVal').value=b.discount||0; document.getElementById('billPayMode').innerText=b.payMode||'CASH'; document.getElementById('dueMark').style.display=b.isDue?'block':'none';
-            const tbody=document.getElementById('billTable').querySelector('tbody'); tbody.innerHTML=''; b.items.forEach(i=>{tbody.innerHTML+=`<tr><td>${i.name}</td><td>${i.price}</td><td>${i.qty}</td><td class="amt" data-val="${i.total}" style="text-align:right;">${i.total}</td><td></td></tr>`;});
-            updateTotal(); setTimeout(async()=>{await generateBillImage();},100);
+            const tbody=document.getElementById('billTable').querySelector('tbody'); tbody.innerHTML=''; 
+            b.items.forEach(i=>{tbody.innerHTML+=`<tr><td contenteditable="true" oninput="recalcRow(this)">${i.name}</td><td contenteditable="true" oninput="recalcRow(this)">${i.price}</td><td contenteditable="true" oninput="recalcRow(this)">${i.qty}</td><td class="amt" data-val="${i.total}" style="text-align:right;">${i.total}</td><td style="text-align:center;"><i class="fas fa-times" style="color:red; cursor:pointer;" onclick="this.closest('tr').remove();updateTotal();"></i></td></tr>`;});
+            updateTotal(); setTimeout(async()=>{await generateBillImage();},100); 
         }
 
-        function sendReminder(n,t){window.open(`https://wa.me/?text=Hello ${n}, Pending: Rs ${t}`, '_blank');}
+        function sendReminder(n,t){window.open(`https://wa.me/?text=Hello ${n}, Pending Amount: Rs ${t}`, '_blank');}
         function delRec(t,id){if(confirm("Delete?")){let d=getData(t==='dues'?'kamdeo_dues':'kamdeo_history').filter(b=>b.id!==id); saveData(t==='dues'?'kamdeo_dues':'kamdeo_history',d); renderList(t);}}
         function markPaid(id){let d=getData('kamdeo_dues');let b=d.find(i=>i.id===id);if(b){b.isDue=false;let h=getData('kamdeo_history');h.unshift(b);saveData('kamdeo_history',h);saveData('kamdeo_dues',d.filter(i=>i.id!==id));renderList('dues');}}
-        function backupData(){const a=document.createElement('a');a.href="data:text/json;charset=utf-8,"+encodeURIComponent(JSON.stringify({p:getData('kamdeo_products'),h:getData('kamdeo_history'),d:getData('kamdeo_dues')}));a.download="backup.json";a.click();}
+        function backupData(){const a=document.createElement('a');a.href="data:text/json;charset=utf-8,"+encodeURIComponent(JSON.stringify({p:getData('kamdeo_products'),h:getData('kamdeo_history'),d:getData('kamdeo_dues'), n:getData('kamdeo_notes')}));a.download="backup.json";a.click();}
         
         let scanner;
-        function startScanner(m){document.getElementById('scannerModal').style.display='flex';scanner=new Html5Qrcode("reader");scanner.start({facingMode:"environment"},{fps:10,qrbox:200},(c)=>{closeScanner();playSound('scan');const db=getProds();
-            if(m==='pos'){ if(db[c]){document.getElementById('iName').value=db[c].name;document.getElementById('iPrice').value=db[c].price;}else{alert("Not Listed");} }
-            else if(m==='product_add'){ if(db[c]){alert("Already Listed:\n"+db[c].name);}else{const n=prompt("Name:");const p=prompt("Price:");if(n&&p){db[c]={name:n,price:p};localStorage.setItem('kamdeo_products',JSON.stringify(db));renderProductList();alert("Saved!");}} }
-        });}
+        function startScanner(m){document.getElementById('scannerModal').style.display='flex';scanner=new Html5Qrcode("reader");scanner.start({facingMode:"environment"},{fps:10,qrbox:200},(c)=>{closeScanner();playSound('scan');const db=getProds(); if(m==='pos'){ if(db[c]){document.getElementById('iName').value=db[c].name;document.getElementById('iPrice').value=db[c].price;}else{alert("Not Listed");} } else if(m==='product_add'){ if(db[c]){alert("⚠️ ALREADY LISTED!\nName: "+db[c].name+"\nPrice: ₹"+db[c].price);}else{const n=prompt("New Name:");const p=prompt("Price:");if(n&&p){db[c]={name:n,price:p};localStorage.setItem('kamdeo_products',JSON.stringify(db));renderProductList();alert("Saved!");}} }});}
         function closeScanner(){if(scanner)scanner.stop();document.getElementById('scannerModal').style.display='none';}
-        
-        function renderProductList(){
-            const l=document.getElementById('productList');l.innerHTML='';const db=getProds();const q=document.getElementById('prodSearch').value.toLowerCase();
-            Object.keys(db).forEach(k=>{
-                if(db[k].name.toLowerCase().includes(q) || k.includes(q))
-                    l.innerHTML+=`<div class="data-card"><div><b>${db[k].name}</b><br><small>${k}</small></div><div>₹${db[k].price}<button class="card-btn btn-edit" onclick="editProd('${k}')"><i class="fas fa-edit"></i></button></div></div>`;
-            });
-        }
-        function editProd(k){ const db=getProds(); const n=prompt("Name:",db[k].name); const p=prompt("Price:",db[k].price); if(n&&p){db[k]={name:n,price:p};localStorage.setItem('kamdeo_products',JSON.stringify(db));renderProductList();} }
+        function renderProductList(){ const l=document.getElementById('productList');l.innerHTML='';const db=getProds();const q=document.getElementById('prodSearch').value.toLowerCase(); Object.keys(db).forEach(k=>{ if(db[k].name.toLowerCase().includes(q) || k.includes(q)) l.innerHTML+=`<div class="data-card"><div><b>${db[k].name}</b><br><small>${k}</small></div><div>₹${db[k].price}<button class="card-btn btn-edit" onclick="editProd('${k}')"><i class="fas fa-edit"></i></button></div></div>`; }); }
+        function editProd(k){ const db=getProds(); const n=prompt("Edit Name:",db[k].name); const p=prompt("Edit Price:",db[k].price); if(n&&p){db[k]={name:n,price:p};localStorage.setItem('kamdeo_products',JSON.stringify(db));renderProductList();} }
     </script>
 </body>
 </html>
