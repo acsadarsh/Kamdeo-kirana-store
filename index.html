@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="mobile-web-app-capable" content="yes">
-    <title>Kamdeo POS Pro Max</title>
+    <title>Kamdeo POS Ultimate</title>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -23,8 +23,8 @@
         .view-section { display: none; flex-direction: column; height: 100%; width: 100%; }
         .active-view { display: flex; }
 
-        /* INPUT DOCK (GAP REDUCED) */
-        .input-dock { flex: 0 0 auto; background: #34495e; padding: 5px 10px; z-index: 10; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        /* INPUT DOCK (GAP COMPLETELY REMOVED) */
+        .input-dock { flex: 0 0 auto; background: #34495e; padding: 5px 10px 8px 10px; z-index: 10; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
         .input-row { display: flex; gap: 5px; margin-bottom: 5px; position: relative; }
         input, select { padding: 10px; border: none; border-radius: 5px; font-weight: bold; outline: none; font-size: 14px; width: 100%; }
         
@@ -33,7 +33,7 @@
         .btn-scan { background: #8e44ad; width: 65px; font-size: 22px; }
         .btn-add { background: #27ae60; flex: 1; font-weight: bold; font-size: 16px; }
 
-        /* MIC ANIMATION */
+        /* CONTINUOUS MIC ANIMATION */
         @keyframes pulseMic { 0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7); } 50% { transform: scale(1.05); box-shadow: 0 0 10px 5px rgba(231, 76, 60, 0.7); } 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); } }
         .mic-listening { background-color: #c0392b !important; animation: pulseMic 1s infinite; }
 
@@ -122,7 +122,7 @@
             <div class="input-dock">
                 <div class="input-row">
                     <input type="text" id="iName" placeholder="Item Name (बोलें/लिखें)" onkeyup="suggestProducts()" autocomplete="off">
-                    <button class="btn btn-mic" onclick="startDictation('iName', this)"><i class="fas fa-microphone"></i></button>
+                    <button id="btnPosMic" class="btn btn-mic" onclick="toggleDictation('iName', 'btnPosMic')"><i class="fas fa-microphone"></i></button>
                     <button class="btn btn-scan" onclick="startScanner('pos')"><i class="fas fa-barcode"></i></button>
                     <div id="suggestBox" class="suggest-box"></div>
                 </div>
@@ -164,7 +164,7 @@
             <div style="display:flex; flex-direction:column; flex:1; padding:15px; overflow-y:auto; padding-bottom:120px;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
                     <span style="font-weight:bold; color:#2c3e50; font-size:16px;">Type or Speak items</span>
-                    <button class="btn btn-mic" style="width:auto; padding:8px 15px;" onclick="startRoughDictation(this)"><i class="fas fa-microphone"></i> Bol Kar Likhen</button>
+                    <button id="btnRoughMic" class="btn btn-mic" style="width:auto; padding:8px 15px;" onclick="toggleDictation('roughBillText', 'btnRoughMic')"><i class="fas fa-microphone"></i> Bol Kar Likhen</button>
                 </div>
                 <textarea id="roughBillText" style="flex:1; width:100%; border:1px solid #ccc; border-radius:5px; padding:15px; font-size:18px; font-family:sans-serif; resize:none;" placeholder="रफ़ बिल यहाँ लिखें या बोलें...&#10;जैसे:&#10;250 का साबुन&#10;2 किलो चीनी&#10;50 वाला 2 तेल"></textarea>
                 <button style="background:#8e44ad; color:white; border:none; padding:15px; font-size:18px; font-weight:bold; border-radius:5px; margin-top:15px; cursor:pointer; box-shadow:0 4px 6px rgba(0,0,0,0.2);" onclick="analyzeRoughBill()"><i class="fas fa-magic"></i> ✨ Create Smart Bill</button>
@@ -293,7 +293,65 @@
             }
         }
 
-        // --- SUGGESTION & NORMAL DICTATION ---
+        // --- CONTINUOUS AI MIC SYSTEM ---
+        let activeMicId = null;
+        let recognition = null;
+
+        function toggleDictation(targetId, btnId) {
+            const btn = document.getElementById(btnId);
+
+            // If same mic clicked again, turn it off
+            if (activeMicId === targetId && recognition) {
+                recognition.stop();
+                return;
+            }
+
+            // Stop any other active mic
+            if (recognition) { recognition.stop(); }
+
+            if ('webkitSpeechRecognition' in window) {
+                recognition = new webkitSpeechRecognition();
+                recognition.lang = 'hi-IN';
+                recognition.continuous = true; // ALWAYS ON
+
+                recognition.onstart = () => {
+                    activeMicId = targetId;
+                    btn.classList.add('mic-listening');
+                    if(targetId === 'roughBillText') btn.innerHTML = '<i class="fas fa-microphone"></i> Sun Raha Hai...';
+                };
+
+                recognition.onresult = e => {
+                    let newText = e.results[e.results.length-1][0].transcript;
+                    if(targetId === 'roughBillText') {
+                        newText = newText.replace(/\b(niche|neeche|nicche|नीचे)\b/gi, '\n').trim();
+                        let current = document.getElementById(targetId).value;
+                        document.getElementById(targetId).value = current + (current.endsWith('\n') || current === '' ? "" : " ") + newText;
+                    } else {
+                        let current = document.getElementById(targetId).value;
+                        document.getElementById(targetId).value = current + (current ? " " : "") + newText.trim();
+                        suggestProducts();
+                    }
+                };
+
+                recognition.onend = () => {
+                    activeMicId = null;
+                    btn.classList.remove('mic-listening');
+                    if(targetId === 'roughBillText') btn.innerHTML = '<i class="fas fa-microphone"></i> Bol Kar Likhen';
+                };
+
+                recognition.onerror = () => {
+                    activeMicId = null;
+                    btn.classList.remove('mic-listening');
+                    if(targetId === 'roughBillText') btn.innerHTML = '<i class="fas fa-microphone"></i> Bol Kar Likhen';
+                };
+
+                recognition.start();
+            } else {
+                alert("Mic not supported in this browser.");
+            }
+        }
+
+        // --- SUGGESTION ---
         function suggestProducts() {
             const val = document.getElementById('iName').value.toLowerCase(); const box = document.getElementById('suggestBox');
             if (!val) { box.style.display = 'none'; return; }
@@ -304,16 +362,6 @@
         function selectSuggest(name, price) { document.getElementById('iName').value = name; document.getElementById('iPrice').value = price; document.getElementById('suggestBox').style.display = 'none'; document.getElementById('iQty').focus(); }
         document.addEventListener('click', function(e) { if(e.target.id !== 'iName' && document.getElementById('suggestBox')) document.getElementById('suggestBox').style.display = 'none'; });
 
-        function startDictation(targetId, btn) {
-            if ('webkitSpeechRecognition' in window) {
-                const rec = new webkitSpeechRecognition(); rec.lang = 'hi-IN';
-                btn.classList.add('mic-listening');
-                rec.start();
-                rec.onresult = e => { document.getElementById(targetId).value = e.results[0][0].transcript; if(targetId==='iName') suggestProducts(); };
-                rec.onend = () => btn.classList.remove('mic-listening');
-                rec.onerror = () => btn.classList.remove('mic-listening');
-            } else alert("Mic not supported.");
-        }
 
         // --- NOTEPAD ---
         let currentNoteId = null;
@@ -337,25 +385,7 @@
         function formatText(cmd, val=null) { document.execCommand(cmd, false, val); document.getElementById('noteEditor').focus(); }
         function insertNoteImage(input) { if (input.files && input.files[0]) { const reader = new FileReader(); reader.onload = function(e) { formatText('insertHTML', `<img src="${e.target.result}"><br>`); }; reader.readAsDataURL(input.files[0]); } }
 
-        // --- 🚀 AI ROUGH BILL PARSER (WITH AI NEWLINE LOGIC) ---
-        function startRoughDictation(btn) {
-            if ('webkitSpeechRecognition' in window) {
-                const rec = new webkitSpeechRecognition(); rec.lang = 'hi-IN'; rec.continuous = true; 
-                btn.classList.add('mic-listening');
-                btn.innerHTML = '<i class="fas fa-microphone"></i> Sun Raha Hai...';
-                rec.start();
-                rec.onresult = e => { 
-                    let newText = e.results[e.results.length-1][0].transcript;
-                    // AI MAGIC: Replace 'niche' with actual new line
-                    newText = newText.replace(/\b(niche|neeche|nicche|नीचे)\b/gi, '\n').trim();
-                    let current = document.getElementById('roughBillText').value;
-                    document.getElementById('roughBillText').value = current + (current.endsWith('\n') || current === '' ? "" : " ") + newText; 
-                }
-                rec.onend = () => { btn.classList.remove('mic-listening'); btn.innerHTML = '<i class="fas fa-microphone"></i> Bol Kar Likhen'; };
-                rec.onerror = () => { btn.classList.remove('mic-listening'); btn.innerHTML = '<i class="fas fa-microphone"></i> Bol Kar Likhen'; };
-            } else alert("Mic not supported.");
-        }
-
+        // --- AI ROUGH BILL PARSER ---
         function analyzeRoughBill() {
             const text = document.getElementById('roughBillText').value;
             if(!text.trim()) { alert("Please write/dictate something!"); return; }
