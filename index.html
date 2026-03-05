@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="mobile-web-app-capable" content="yes">
-    <title>Kamdeo POS Final</title>
+    <title>Kamdeo POS Pro Max</title>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -23,15 +23,19 @@
         .view-section { display: none; flex-direction: column; height: 100%; width: 100%; }
         .active-view { display: flex; }
 
-        /* INPUT DOCK & SUGGESTIONS */
-        .input-dock { flex: 0 0 auto; background: #34495e; padding: 10px; z-index: 10; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        /* INPUT DOCK (GAP REDUCED) */
+        .input-dock { flex: 0 0 auto; background: #34495e; padding: 5px 10px; z-index: 10; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
         .input-row { display: flex; gap: 5px; margin-bottom: 5px; position: relative; }
         input, select { padding: 10px; border: none; border-radius: 5px; font-weight: bold; outline: none; font-size: 14px; width: 100%; }
         
-        .btn { border: none; border-radius: 5px; cursor: pointer; color: white; display: flex; align-items: center; justify-content: center; }
+        .btn { border: none; border-radius: 5px; cursor: pointer; color: white; display: flex; align-items: center; justify-content: center; transition: 0.3s; }
         .btn-mic { background: #e67e22; width: 50px; font-size: 18px; }
         .btn-scan { background: #8e44ad; width: 65px; font-size: 22px; }
         .btn-add { background: #27ae60; flex: 1; font-weight: bold; font-size: 16px; }
+
+        /* MIC ANIMATION */
+        @keyframes pulseMic { 0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7); } 50% { transform: scale(1.05); box-shadow: 0 0 10px 5px rgba(231, 76, 60, 0.7); } 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); } }
+        .mic-listening { background-color: #c0392b !important; animation: pulseMic 1s infinite; }
 
         .suggest-box { position: absolute; top: 100%; left: 0; width: 100%; background: white; color: black; box-shadow: 0 4px 10px rgba(0,0,0,0.5); max-height: 180px; overflow-y: auto; z-index: 1000; border-radius: 0 0 5px 5px; display: none; }
         .suggest-item { padding: 12px; border-bottom: 1px solid #ddd; font-weight: bold; cursor: pointer; display: flex; justify-content: space-between; }
@@ -69,8 +73,6 @@
         #noteEditor { flex:1; padding:15px; overflow-y:auto; outline:none; font-size:16px; line-height:1.5; font-family: sans-serif; background:#fff; color:#000; }
         #noteEditor[contenteditable]:empty:before { content: attr(data-placeholder); color: #aaa; font-style: italic; }
         #noteEditor img { max-width: 100%; border-radius: 5px; margin: 10px 0; }
-
-        /* NOTEPAD TABS */
         .tab-btn { flex: 1; padding: 12px; border: none; font-weight: bold; color: white; cursor: pointer; font-size: 14px; }
         .tab-active { background: #34495e; }
         .tab-inactive { background: #1a252f; }
@@ -91,13 +93,15 @@
         #voiceModal { display:none; position:fixed; top:50px; left:0; width:100%; height:calc(100% - 50px); background:rgba(0,0,0,0.8); z-index:6000; flex-direction:column; align-items:center; justify-content:center; }
         .voice-box { background:white; padding:20px; border-radius:10px; text-align:center; width:80%; max-width:300px; }
 
-        /* REFRESH BTN - MARGIN INCREASED TO 35px SO IT'S FAR AWAY FROM MENU */
+        /* NOTIFICATION MODAL */
+        #notiModal { display:none; position:fixed; top:50px; left:0; width:100%; height:calc(100% - 50px); background:rgba(0,0,0,0.8); z-index:6000; flex-direction:column; align-items:center; justify-content:center; }
+
         .refresh-btn { color: white; font-size: 20px; margin-left: 35px; cursor: pointer; padding: 5px; }
 
         @media print { .app-header, .input-dock, .action-bar, .sidebar, .search-box, .card-btn, #imgPreviewModal, .refresh-btn { display: none !important; } body, .main-container, .view-section, .scroll-area { height: auto; overflow: visible; display: block; margin: 0; padding: 0; } #view-pos { display: block; } .paper-bill { box-shadow: none; margin: 0; width: 100%; max-width: 58mm; border: none; padding: 0; } }
     </style>
 </head>
-<body>
+<body onload="checkNotiDot()">
 
     <div class="app-header">
         <div style="display:flex; align-items:center;">
@@ -105,7 +109,11 @@
             <div onclick="location.reload()" class="refresh-btn"><i class="fas fa-sync-alt"></i></div>
         </div>
         <div style="font-weight:bold; font-size:18px;">KAMDEO POS</div>
-        <div style="font-size: 11px; font-weight:bold;">ACS</div>
+        
+        <div onclick="openNotiModal()" style="position:relative; cursor:pointer; padding:5px;">
+            <i class="fas fa-bell" style="font-size:22px; color:#f1c40f;"></i>
+            <span id="notiDot" style="display:none; position:absolute; top:2px; right:2px; color:red; font-size:12px;">🔴</span>
+        </div>
     </div>
 
     <div class="main-container">
@@ -114,7 +122,7 @@
             <div class="input-dock">
                 <div class="input-row">
                     <input type="text" id="iName" placeholder="Item Name (बोलें/लिखें)" onkeyup="suggestProducts()" autocomplete="off">
-                    <button class="btn btn-mic" onclick="startDictation('iName')"><i class="fas fa-microphone"></i></button>
+                    <button class="btn btn-mic" onclick="startDictation('iName', this)"><i class="fas fa-microphone"></i></button>
                     <button class="btn btn-scan" onclick="startScanner('pos')"><i class="fas fa-barcode"></i></button>
                     <div id="suggestBox" class="suggest-box"></div>
                 </div>
@@ -153,10 +161,10 @@
 
         <div id="view-rough" class="view-section" style="background:#ecf0f1;">
             <div style="background:#34495e; color:white; padding:15px; font-weight:bold; font-size:18px; text-align:center;">🧾 Rough Bill Maker (AI)</div>
-            <div style="display:flex; flex-direction:column; flex:1; padding:15px; overflow-y:auto;">
+            <div style="display:flex; flex-direction:column; flex:1; padding:15px; overflow-y:auto; padding-bottom:120px;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
                     <span style="font-weight:bold; color:#2c3e50; font-size:16px;">Type or Speak items</span>
-                    <button class="btn btn-mic" style="width:auto; padding:8px 15px;" onclick="startRoughDictation()"><i class="fas fa-microphone"></i> Bol Kar Likhen</button>
+                    <button class="btn btn-mic" style="width:auto; padding:8px 15px;" onclick="startRoughDictation(this)"><i class="fas fa-microphone"></i> Bol Kar Likhen</button>
                 </div>
                 <textarea id="roughBillText" style="flex:1; width:100%; border:1px solid #ccc; border-radius:5px; padding:15px; font-size:18px; font-family:sans-serif; resize:none;" placeholder="रफ़ बिल यहाँ लिखें या बोलें...&#10;जैसे:&#10;250 का साबुन&#10;2 किलो चीनी&#10;50 वाला 2 तेल"></textarea>
                 <button style="background:#8e44ad; color:white; border:none; padding:15px; font-size:18px; font-weight:bold; border-radius:5px; margin-top:15px; cursor:pointer; box-shadow:0 4px 6px rgba(0,0,0,0.2);" onclick="analyzeRoughBill()"><i class="fas fa-magic"></i> ✨ Create Smart Bill</button>
@@ -215,6 +223,19 @@
         <a onclick="backupData()"><i class="fas fa-cloud-download-alt"></i> Backup Data</a>
     </div>
 
+    <div id="notiModal">
+        <div style="background:white; width:90%; max-width:400px; border-radius:10px; overflow:hidden; display:flex; flex-direction:column; max-height:80vh;">
+            <div style="background:#1a252f; color:white; padding:15px; display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-weight:bold; font-size:18px;">🔔 Notifications</span>
+                <div>
+                    <button onclick="addNotification()" style="background:#27ae60; color:white; border:none; padding:5px 10px; border-radius:5px; margin-right:10px; font-weight:bold;">+ Add</button>
+                    <button onclick="closeNotiModal()" style="background:#c0392b; color:white; border:none; padding:5px 10px; border-radius:5px;"><i class="fas fa-times"></i></button>
+                </div>
+            </div>
+            <div id="notiList" style="padding:15px; overflow-y:auto; flex:1; background:#ecf0f1;"></div>
+        </div>
+    </div>
+
     <div id="imgPreviewModal"><div style="color:white; margin-bottom:10px; font-weight:bold;">Bill Generated</div><div id="imgContainer"></div><div style="margin-top:20px; display:flex; gap:10px;"><button onclick="shareImageToDrive()" style="background:#2ecc71; color:white; border:none; padding:10px 20px; font-size:16px; border-radius:5px;"><i class="fas fa-share-alt"></i> Share</button><button onclick="document.getElementById('imgPreviewModal').style.display='none'" style="background:red; color:white; border:none; padding:10px 20px; font-size:16px; border-radius:5px;">Close</button></div></div>
     <div id="scannerModal"><div id="reader" style="width:300px; height:300px; background:white;"></div><button onclick="closeScanner()" style="background:red; color:white; border:none; padding:10px; margin-top:20px;">CLOSE</button></div>
     <div id="voiceModal"><div class="voice-box"><h3 style="color:black; margin-top:0;">🎤 Voice Note</h3><p id="voiceStatus" style="color:#c0392b; font-weight:bold;">क्या आप वॉयस मैसेज जोड़ना चाहते हैं?</p><div style="display:flex; justify-content:center; gap:10px; margin-bottom:15px;"><button id="btnStartVoice" onclick="startVoiceRecord()" style="background:#27ae60; color:white; padding:10px 15px; border:none; border-radius:5px; font-weight:bold;"><i class="fas fa-play"></i> Start Record</button><button id="btnStopVoice" onclick="stopVoiceRecord()" style="background:#c0392b; color:white; padding:10px 15px; border:none; border-radius:5px; font-weight:bold; display:none;"><i class="fas fa-stop"></i> Stop & Save</button></div><button onclick="skipVoiceRecord()" style="background:#555; color:white; padding:10px; border:none; border-radius:5px; width:100%; font-weight:bold;">Skip (Without Voice)</button></div></div>
@@ -232,6 +253,47 @@
         function saveData(k,d){localStorage.setItem(k,JSON.stringify(d));}
         function getProds(){return JSON.parse(localStorage.getItem('kamdeo_products')||'{}');}
         
+        // --- NOTIFICATION SYSTEM ---
+        function checkNotiDot() {
+            if(localStorage.getItem('kamdeo_new_noti') === 'true') document.getElementById('notiDot').style.display = 'block';
+            else document.getElementById('notiDot').style.display = 'none';
+        }
+        function openNotiModal() {
+            localStorage.setItem('kamdeo_new_noti', 'false'); checkNotiDot(); renderNotiList();
+            document.getElementById('notiModal').style.display = 'flex';
+        }
+        function closeNotiModal() { document.getElementById('notiModal').style.display = 'none'; }
+        function renderNotiList() {
+            const list = JSON.parse(localStorage.getItem('kamdeo_notis') || '[]'); const container = document.getElementById('notiList'); container.innerHTML = '';
+            if(list.length === 0) container.innerHTML = '<div style="text-align:center; color:#777; margin-top:20px;">No notifications yet.</div>';
+            list.forEach((n, idx) => {
+                container.innerHTML += `<div style="background:white; padding:10px; border-radius:5px; margin-bottom:10px; box-shadow:0 1px 3px rgba(0,0,0,0.2); position:relative;">
+                    <div style="font-size:11px; color:#888; margin-bottom:5px;">${n.date}</div>
+                    <div style="font-size:15px; color:#333; font-weight:bold;">${n.msg}</div>
+                    <i class="fas fa-trash" style="position:absolute; top:10px; right:10px; color:#c0392b; cursor:pointer;" onclick="delNoti(${idx})"></i></div>`;
+            });
+        }
+        function addNotification() {
+            const pass = prompt("Enter Password (24361):");
+            if(pass === "24361") {
+                const msg = prompt("Enter new message:");
+                if(msg) {
+                    const list = JSON.parse(localStorage.getItem('kamdeo_notis') || '[]');
+                    list.unshift({msg: msg, date: new Date().toLocaleString()});
+                    localStorage.setItem('kamdeo_notis', JSON.stringify(list));
+                    localStorage.setItem('kamdeo_new_noti', 'true');
+                    renderNotiList(); checkNotiDot();
+                }
+            } else if (pass !== null) alert("Incorrect Password!");
+        }
+        function delNoti(idx) {
+            if(confirm("Delete this notification?")) {
+                const list = JSON.parse(localStorage.getItem('kamdeo_notis') || '[]'); list.splice(idx, 1);
+                localStorage.setItem('kamdeo_notis', JSON.stringify(list)); renderNotiList();
+            }
+        }
+
+        // --- SUGGESTION & NORMAL DICTATION ---
         function suggestProducts() {
             const val = document.getElementById('iName').value.toLowerCase(); const box = document.getElementById('suggestBox');
             if (!val) { box.style.display = 'none'; return; }
@@ -242,10 +304,14 @@
         function selectSuggest(name, price) { document.getElementById('iName').value = name; document.getElementById('iPrice').value = price; document.getElementById('suggestBox').style.display = 'none'; document.getElementById('iQty').focus(); }
         document.addEventListener('click', function(e) { if(e.target.id !== 'iName' && document.getElementById('suggestBox')) document.getElementById('suggestBox').style.display = 'none'; });
 
-        function startDictation(targetId) {
+        function startDictation(targetId, btn) {
             if ('webkitSpeechRecognition' in window) {
-                const rec = new webkitSpeechRecognition(); rec.lang = 'hi-IN'; rec.start();
-                rec.onresult = e => { document.getElementById(targetId).value = e.results[0][0].transcript; if(targetId==='iName') suggestProducts(); }
+                const rec = new webkitSpeechRecognition(); rec.lang = 'hi-IN';
+                btn.classList.add('mic-listening');
+                rec.start();
+                rec.onresult = e => { document.getElementById(targetId).value = e.results[0][0].transcript; if(targetId==='iName') suggestProducts(); };
+                rec.onend = () => btn.classList.remove('mic-listening');
+                rec.onerror = () => btn.classList.remove('mic-listening');
             } else alert("Mic not supported.");
         }
 
@@ -271,15 +337,22 @@
         function formatText(cmd, val=null) { document.execCommand(cmd, false, val); document.getElementById('noteEditor').focus(); }
         function insertNoteImage(input) { if (input.files && input.files[0]) { const reader = new FileReader(); reader.onload = function(e) { formatText('insertHTML', `<img src="${e.target.result}"><br>`); }; reader.readAsDataURL(input.files[0]); } }
 
-        // --- AI ROUGH BILL PARSER ---
-        function startRoughDictation() {
+        // --- 🚀 AI ROUGH BILL PARSER (WITH AI NEWLINE LOGIC) ---
+        function startRoughDictation(btn) {
             if ('webkitSpeechRecognition' in window) {
-                const rec = new webkitSpeechRecognition(); rec.lang = 'hi-IN'; rec.continuous = true; rec.start();
+                const rec = new webkitSpeechRecognition(); rec.lang = 'hi-IN'; rec.continuous = true; 
+                btn.classList.add('mic-listening');
+                btn.innerHTML = '<i class="fas fa-microphone"></i> Sun Raha Hai...';
+                rec.start();
                 rec.onresult = e => { 
-                    let current = document.getElementById('roughBillText').value;
                     let newText = e.results[e.results.length-1][0].transcript;
-                    document.getElementById('roughBillText').value = current + (current ? "\n" : "") + newText; 
+                    // AI MAGIC: Replace 'niche' with actual new line
+                    newText = newText.replace(/\b(niche|neeche|nicche|नीचे)\b/gi, '\n').trim();
+                    let current = document.getElementById('roughBillText').value;
+                    document.getElementById('roughBillText').value = current + (current.endsWith('\n') || current === '' ? "" : " ") + newText; 
                 }
+                rec.onend = () => { btn.classList.remove('mic-listening'); btn.innerHTML = '<i class="fas fa-microphone"></i> Bol Kar Likhen'; };
+                rec.onerror = () => { btn.classList.remove('mic-listening'); btn.innerHTML = '<i class="fas fa-microphone"></i> Bol Kar Likhen'; };
             } else alert("Mic not supported.");
         }
 
@@ -378,7 +451,7 @@
         function sendReminder(n,t){window.open(`https://wa.me/?text=Hello ${n}, Pending Amount: Rs ${t}`, '_blank');}
         function delRec(t,id){if(confirm("Delete?")){let d=getData(t==='dues'?'kamdeo_dues':'kamdeo_history').filter(b=>b.id!==id); saveData(t==='dues'?'kamdeo_dues':'kamdeo_history',d); renderList(t);}}
         function markPaid(id){let d=getData('kamdeo_dues');let b=d.find(i=>i.id===id);if(b){b.isDue=false;let h=getData('kamdeo_history');h.unshift(b);saveData('kamdeo_history',h);saveData('kamdeo_dues',d.filter(i=>i.id!==id));renderList('dues');}}
-        function backupData(){const a=document.createElement('a');a.href="data:text/json;charset=utf-8,"+encodeURIComponent(JSON.stringify({p:getData('kamdeo_products'),h:getData('kamdeo_history'),d:getData('kamdeo_dues'), n:getData('kamdeo_notes')}));a.download="backup.json";a.click();}
+        function backupData(){const a=document.createElement('a');a.href="data:text/json;charset=utf-8,"+encodeURIComponent(JSON.stringify({p:getData('kamdeo_products'),h:getData('kamdeo_history'),d:getData('kamdeo_dues'), n:getData('kamdeo_notes'), notis:getData('kamdeo_notis')}));a.download="backup.json";a.click();}
         
         let scanner;
         function startScanner(m){document.getElementById('scannerModal').style.display='flex';scanner=new Html5Qrcode("reader");scanner.start({facingMode:"environment"},{fps:10,qrbox:200},(c)=>{closeScanner();playSound('scan');const db=getProds(); if(m==='pos'){ if(db[c]){document.getElementById('iName').value=db[c].name;document.getElementById('iPrice').value=db[c].price;}else{alert("Not Listed");} } else if(m==='product_add'){ if(db[c]){alert("⚠️ ALREADY LISTED!\nName: "+db[c].name+"\nPrice: ₹"+db[c].price);}else{const n=prompt("New Name:");const p=prompt("Price:");if(n&&p){db[c]={name:n,price:p};localStorage.setItem('kamdeo_products',JSON.stringify(db));renderProductList();alert("Saved!");}} }});}
